@@ -12,7 +12,8 @@ services:
     env_file:
       - ./dotenv_files/.env
     depends_on:
-      - psql
+      psql:
+        condition: service_healthy
     restart: unless-stopped
   psql:
     container_name: psql
@@ -22,3 +23,8 @@ services:
     env_file:
       - ./dotenv_files/.env
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
