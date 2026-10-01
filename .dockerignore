@@ -22,3 +22,7 @@ logs
 stats
 Dockerfile
 __localcode/
+venv/
+data/
+.env
+dotenv_files/.env
