@@ -64,6 +64,16 @@ Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/
 
 5. Acesse **http://localhost:8000**. O painel fica em **http://localhost:8000/admin**.
 
+### Posts de exemplo
+
+Para preencher o blog com 15 posts sobre personalidades famosas (esporte, música, cinema, ciência e literatura), rode:
+
+```bash
+docker compose exec djangoapp python manage.py seed_posts
+```
+
+12 posts são publicados com datas das últimas semanas e 3 ficam agendados para os próximos dias, aparecendo sozinhos no site. O comando pode ser executado mais de uma vez sem duplicar posts. O conteúdo fica em `djangoapp/blog/data/famosos.json`.
+
 ### Publicando um post
 
 No admin, vá em **Posts → Adicionar**, preencha título, resumo e conteúdo (uma linha em branco entre parágrafos), marque **Publicado** e salve. O post aparece no site, no feed RSS e no assistente de IA na hora.
