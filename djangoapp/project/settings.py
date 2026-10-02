@@ -198,7 +198,7 @@ else:
 SIGNUP_NOTIFY_EMAIL = os.getenv(
     'SIGNUP_NOTIFY_EMAIL', 'Bruno.h.souza258@gmail.com'
 )
-FEEDBACK_EMAIL = os.getenv('FEEDBACK_EMAIL', 'bruno.h.souza158@gmail.com')
+FEEDBACK_EMAIL = os.getenv('FEEDBACK_EMAIL', 'Bruno.h.souza258@gmail.com')
 
 
 # Autenticação
