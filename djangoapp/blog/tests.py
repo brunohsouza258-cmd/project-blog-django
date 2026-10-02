@@ -172,3 +172,21 @@ class PostAdminTests(TestCase):
         self.assertEqual(post.created_by, self.admin)
         self.assertEqual(post.slug, 'pelo-admin')
         self.assertContains(self.client.get(reverse('blog:index')), 'Pelo admin')
+
+
+class SeedPostsCommandTests(TestCase):
+    def test_creates_posts_once(self):
+        from io import StringIO
+
+        from django.core.management import call_command
+
+        call_command('seed_posts', stdout=StringIO())
+        self.assertEqual(Post.objects.count(), 15)
+        self.assertEqual(Post.objects.published().count(), 12)
+        self.assertEqual(Category.objects.count(), 5)
+
+        # Rodar de novo não duplica nada
+        output = StringIO()
+        call_command('seed_posts', stdout=output)
+        self.assertEqual(Post.objects.count(), 15)
+        self.assertIn('0 posts criados, 15 já existiam', output.getvalue())
