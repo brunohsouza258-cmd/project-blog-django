@@ -180,13 +180,27 @@ class SeedPostsCommandTests(TestCase):
 
         from django.core.management import call_command
 
-        call_command('seed_posts', stdout=StringIO())
+        call_command('seed_posts', '--sem-imagens', stdout=StringIO())
         self.assertEqual(Post.objects.count(), 15)
         self.assertEqual(Post.objects.published().count(), 12)
         self.assertEqual(Category.objects.count(), 5)
 
         # Rodar de novo não duplica nada
         output = StringIO()
-        call_command('seed_posts', stdout=output)
+        call_command('seed_posts', '--sem-imagens', stdout=output)
         self.assertEqual(Post.objects.count(), 15)
-        self.assertIn('0 posts criados, 15 já existiam', output.getvalue())
+        self.assertIn('0 posts criados, 15 já existiam, 0 capas', output.getvalue())
+
+
+class HeaderAndCoverTests(TestCase):
+    def test_cover_credit_is_shown_with_link(self):
+        post = make_post(
+            'Com capa', cover='posts/teste.jpg',
+            cover_credit='Foto: Fulano (CC BY-SA 4.0), via Wikimedia Commons',
+            cover_source='https://commons.wikimedia.org/wiki/File:Teste.jpg',
+        )
+        response = self.client.get(post.get_absolute_url())
+        self.assertContains(response, 'Foto: Fulano (CC BY-SA 4.0)')
+        self.assertContains(
+            response, 'href="https://commons.wikimedia.org/wiki/File:Teste.jpg"'
+        )

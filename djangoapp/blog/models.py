@@ -84,6 +84,16 @@ class Post(models.Model):
         validators=[validate_cover_image],
         help_text='JPG, PNG ou WEBP. Imagens grandes são reduzidas para 1200px.',
     )
+    # Fotos com licença Creative Commons exigem crédito ao autor; ele aparece
+    # embaixo da capa na página do post, com link para a página da imagem.
+    cover_credit = models.CharField(
+        'Crédito da capa', max_length=255, blank=True,
+        help_text='Ex.: "Foto: Fulano (CC BY-SA 4.0), via Wikimedia Commons".',
+    )
+    cover_source = models.URLField(
+        'Fonte da capa', blank=True,
+        help_text='Link da página original da imagem.',
+    )
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, null=True, blank=True,
         verbose_name='Categoria', related_name='posts',

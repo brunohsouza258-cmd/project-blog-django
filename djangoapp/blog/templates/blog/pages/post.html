@@ -21,7 +21,18 @@
         </header>
 
         {% if post.cover %}
-            <img class="post-page-cover" src="{{ post.cover.url }}" alt="">
+            <figure class="post-figure">
+                <img class="post-page-cover" src="{{ post.cover.url }}" alt="{{ post.title }}">
+                {% if post.cover_credit %}
+                    <figcaption class="post-credit">
+                        {% if post.cover_source %}
+                            <a href="{{ post.cover_source }}" target="_blank" rel="noopener noreferrer">{{ post.cover_credit }}</a>
+                        {% else %}
+                            {{ post.cover_credit }}
+                        {% endif %}
+                    </figcaption>
+                {% endif %}
+            </figure>
         {% endif %}
 
         {# linebreaks transforma as linhas em branco em parágrafos. O texto continua escapado (sem HTML), então é seguro. #}
