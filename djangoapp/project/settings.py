@@ -75,6 +75,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.csp.ContentSecurityPolicyMiddleware',
+    # Serve o CSS/JS com cache e compressão quando o gunicorn está no ar.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -283,3 +285,15 @@ NUM_PROXIES = int(os.getenv('NUM_PROXIES', '0'))
 # Endereço do painel admin. Troque no .env por algo difícil de adivinhar,
 # ex.: ADMIN_URL="painel-a8f3k2/". Sempre termine com "/".
 ADMIN_URL = os.getenv('ADMIN_URL', 'admin/').strip('/') + '/'
+
+if not DEBUG:
+    # Em produção, nomes de arquivo com hash (style.abc123.css): o navegador
+    # guarda em cache por muito tempo e baixa de novo só quando muda.
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }

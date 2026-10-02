@@ -63,3 +63,10 @@ class AdminAndMediaSecurityTests(TestCase):
         self.assertEqual(response.status_code, 429)
         # Abrir a página (GET) continua funcionando
         self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_media_blocks_path_traversal(self):
+        # 400 (caminho suspeito) ou 404: o importante é nunca servir o arquivo
+        for path in ('/media/../../etc/passwd', '/media/..%2F..%2Fetc/passwd'):
+            response = self.client.get(path)
+            self.assertIn(response.status_code, (400, 404), path)
+            self.assertNotIn(b'root:', response.content)
