@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.core import mail
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
@@ -31,6 +33,13 @@ class RegisterTests(TestCase):
         self.assertEqual(
             int(self.client.session['_auth_user_id']), user.pk
         )
+
+    def test_register_notifies_owner_by_email(self):
+        self.client.post(reverse('accounts:register'), VALID_DATA)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [settings.SIGNUP_NOTIFY_EMAIL])
+        self.assertIn('maria@email.com', mail.outbox[0].body)
 
     def test_register_rejects_duplicate_email(self):
         User.objects.create_user('maria@email.com', 'maria@email.com', 'x')

@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 
 from accounts.forms import EmailAuthenticationForm, RegisterForm
@@ -29,6 +31,15 @@ def register(request):
         user = form.save()
         # Já entra na conta logo depois do cadastro.
         login(request, user)
+
+        # Avisa o dono do blog que alguém criou uma conta.
+        send_mail(
+            subject=f'[Blog] Nova conta: {user.first_name}',
+            message=f'Nome: {user.first_name}\nE-mail: {user.email}',
+            from_email=None,  # usa o DEFAULT_FROM_EMAIL do settings.py
+            recipient_list=[settings.SIGNUP_NOTIFY_EMAIL],
+            fail_silently=True,
+        )
 
         messages.success(
             request, f'Conta criada! Bem-vindo, {user.first_name}.'

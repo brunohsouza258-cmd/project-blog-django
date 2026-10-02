@@ -1,0 +1,26 @@
+{% extends "blog/partials/base.html" %}
+
+{% block content %}
+    <section class="auth container">
+        <div class="auth-card auth-card-wide">
+            <h1 class="auth-title">Deixe seu <span class="gradient-text">feedback</span></h1>
+            <p class="auth-subtitle">Elogios, sugestões ou problemas: eu leio tudo.</p>
+
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                {# Reaproveita o mesmo partial de campos das páginas de conta #}
+                {% include "accounts/_form_fields.html" %}
+
+                {# Honeypot: invisível para pessoas, veja FeedbackForm.website #}
+                <div class="hp-field" aria-hidden="true">
+                    <label for="id_website">Deixe em branco</label>
+                    <input type="text" name="website" id="id_website" tabindex="-1" autocomplete="off">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Enviar feedback <span class="btn-arrow">&rarr;</span>
+                </button>
+            </form>
+        </div>
+    </section>
+{% endblock content %}

@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'blog',
     'site_setup',
     'accounts',
+    'feedback',
 ]
 
 
@@ -175,7 +176,26 @@ MEDIA_ROOT = DATA_DIR / 'media'
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Sem EMAIL_HOST no .env, os e-mails só aparecem no terminal (docker compose
+# logs). Com os dados do Gmail no .env, eles são enviados de verdade.
+
+EMAIL_HOST = os.getenv('EMAIL_HOST', '')
+
+if EMAIL_HOST:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+    EMAIL_USE_TLS = True
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Quem recebe os avisos do site
+SIGNUP_NOTIFY_EMAIL = os.getenv(
+    'SIGNUP_NOTIFY_EMAIL', 'Bruno.h.souza258@gmail.com'
+)
+FEEDBACK_EMAIL = os.getenv('FEEDBACK_EMAIL', 'bruno.h.souza158@gmail.com')
 
 
 # Autenticação

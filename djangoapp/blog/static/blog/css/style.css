@@ -812,6 +812,10 @@ a {
   background: var(--gradient);
 }
 
+.auth-card-wide {
+  width: min(100%, 560px);
+}
+
 .auth-title {
   font-family: var(--font-display);
   font-size: 2rem;
@@ -840,7 +844,8 @@ a {
 }
 
 /* Estiliza os inputs que o Django gera ({{ field }}) sem precisar de classe */
-.auth-form input:not([type="hidden"]) {
+.auth-form input:not([type="hidden"]),
+.auth-form textarea {
   width: 100%;
   padding: 12px 16px;
   border: 1px solid var(--border);
@@ -851,23 +856,33 @@ a {
   transition: border-color 0.25s, box-shadow 0.25s, background-color 0.25s;
 }
 
-.auth-form input::placeholder {
+.auth-form textarea {
+  min-height: 140px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.auth-form input::placeholder,
+.auth-form textarea::placeholder {
   color: var(--text-muted);
   opacity: 0.7;
 }
 
-.auth-form input:hover {
+.auth-form input:hover,
+.auth-form textarea:hover {
   border-color: var(--text-muted);
 }
 
-.auth-form input:focus {
+.auth-form input:focus,
+.auth-form textarea:focus {
   outline: none;
   border-color: var(--violet);
   background: var(--surface);
   box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
 }
 
-.has-error input:not([type="hidden"]) {
+.has-error input:not([type="hidden"]),
+.has-error textarea {
   border-color: #ef4444;
 }
 
@@ -892,6 +907,15 @@ a {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
   font-size: 0.9rem;
+}
+
+/* Honeypot do feedback: fora da tela para pessoas, visível para robôs */
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 
 .auth-switch {
