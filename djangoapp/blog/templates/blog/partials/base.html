@@ -4,6 +4,11 @@
     {% include "blog/partials/_head.html" %}
 </head>
 <body id="topo">
+    {% comment %}
+        "not site_setup or ..." mostra a parte quando ainda não existe Setup
+        cadastrado no admin. Sem isso o site ficaria em branco até alguém
+        criar o Setup, porque site_setup seria None.
+    {% endcomment %}
     {% if not site_setup or site_setup.show_header %}
         {% include "blog/partials/_header.html" %}
     {% endif %}

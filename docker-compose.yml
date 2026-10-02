@@ -3,14 +3,19 @@ services:
     container_name: djangoapp
     build:
       context: .
+    # "porta do seu PC : porta do container"
     ports:
       - 8000:8000
+    # Bind mounts: a pasta do seu PC aparece dentro do container. Por isso
+    # editar o código no VS Code já reflete no servidor sem rebuild.
     volumes:
       - ./djangoapp:/djangoapp
       - ./data/web/static:/data/web/static/
       - ./data/web/media:/data/web/media/
     env_file:
       - ./dotenv_files/.env
+    # Só inicia o Django quando o healthcheck do Postgres passar
+    # (um depends_on simples só espera o container iniciar, não o banco).
     depends_on:
       psql:
         condition: service_healthy
@@ -18,11 +23,16 @@ services:
   psql:
     container_name: psql
     image: postgres:16-alpine
+    # Os dados do banco ficam salvos no seu PC, então não somem quando
+    # o container é removido com "docker compose down".
     volumes:
       - ./data/postgres/data:/var/lib/postgresql/data/
     env_file:
       - ./dotenv_files/.env
     restart: unless-stopped
+    # pg_isready pergunta ao Postgres se ele já aceita conexões.
+    # O "$$" escapa o "$" para a variável ser lida dentro do container,
+    # e não pelo docker compose.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s

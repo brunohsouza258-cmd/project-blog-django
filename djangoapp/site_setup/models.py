@@ -41,6 +41,11 @@ class SiteSetup(models.Model):
     )
 
     def save(self, *args, **kwargs):
+        # Guarda o nome do favicon ANTES de salvar. Num upload novo ele é só
+        # o nome do arquivo enviado (ex.: "logo.png"); depois do save o Django
+        # move o arquivo e o nome vira o caminho completo
+        # (ex.: "assets/favicon/2026/10/logo.png"). Se o nome mudou, é porque
+        # chegou um arquivo novo.
         current_favicon_name = str(self.favicon.name)
         super().save(*args, **kwargs)
         favicon_changed = False
@@ -48,6 +53,8 @@ class SiteSetup(models.Model):
         if self.favicon:
             favicon_changed = current_favicon_name != self.favicon.name
 
+        # Só redimensiona quando o favicon foi trocado, para não reprocessar
+        # a imagem toda vez que alguém salvar o Setup no admin.
         if favicon_changed:
             resize_image(self.favicon, 32)
 

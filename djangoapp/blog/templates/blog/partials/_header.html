@@ -1,10 +1,16 @@
 <header class="site-header">
     <div class="container header-inner">
         <a href="{% url 'blog:index' %}" class="logo">
+            {# Filtros em cadeia: usa "B" se não tiver título, pega a 1ª letra e deixa maiúscula #}
             <span class="logo-mark">{{ site_setup.title|default:"B"|first|upper }}</span>
             <span class="gradient-text">{{ site_setup.title|default:"Blog" }}</span>
         </a>
 
+        {% comment %}
+            Menu mobile sem JavaScript: o checkbox fica escondido e o <label>
+            (botão hambúrguer) marca/desmarca ele. O CSS usa :checked para
+            abrir o menu. Veja ".menu-toggle:checked" no style.css.
+        {% endcomment %}
         <input type="checkbox" id="menu-toggle" class="menu-toggle">
         <label for="menu-toggle" class="menu-button" aria-label="Abrir menu">
             <span></span>
@@ -15,6 +21,11 @@
                 {% if not site_setup or site_setup.show_menu %}
                     <ul class="menu">
                         <li><a href="{% url 'blog:index' %}" class="menu-link">Início</a></li>
+                        {% comment %}
+                            menulink_set é criado automaticamente pelo Django por causa
+                            da ForeignKey de MenuLink para SiteSetup.
+                            rel="noopener" impede a aba nova de controlar esta aba (segurança).
+                        {% endcomment %}
                         {% for link in site_setup.menulink_set.all %}
                             <li>
                                 <a href="{{ link.url_or_path }}" class="menu-link"
@@ -27,6 +38,7 @@
                 {% endif %}
 
                 {% if not site_setup or site_setup.show_search %}
+                    {# method="get" coloca a busca na URL (?q=termo); o value mantém o texto digitado depois de buscar #}
                     <form class="search-form" action="{% url 'blog:index' %}" method="get" role="search">
                         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
                             <circle cx="11" cy="11" r="7"></circle>

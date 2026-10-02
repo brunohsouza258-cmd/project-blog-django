@@ -2,6 +2,8 @@
    Tokens
    ========================================================================== */
 
+/* Variáveis CSS (custom properties): mude uma cor aqui e ela muda no site
+   inteiro. São usadas com var(--nome). */
 :root {
   --violet: #7c3aed;
   --pink: #ec4899;
@@ -31,6 +33,8 @@
   --font-display: "Poppins", var(--font);
 }
 
+/* Tema escuro automático: se o sistema do usuário estiver no modo escuro,
+   só as variáveis são redefinidas. O resto do CSS não precisa mudar. */
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0d0b1a;
@@ -102,11 +106,16 @@ a {
   border-radius: 6px;
 }
 
+/* min() escolhe o menor valor: em telas pequenas ocupa a tela toda menos
+   16px de cada lado; em telas grandes trava em 1180px. Sem media query. */
 .container {
   width: min(100% - 32px, var(--container));
   margin-inline: auto;
 }
 
+/* Texto com gradiente: o fundo é recortado no formato das letras
+   (background-clip: text) e a cor do texto fica transparente para o
+   gradiente aparecer. background-size 200% permite animar a posição. */
 .gradient-text {
   background: var(--gradient);
   background-size: 200% auto;
@@ -125,6 +134,7 @@ a {
   top: 0;
   z-index: 50;
   background: var(--header-bg);
+  /* Efeito "vidro fosco": desfoca o que passa por trás do header ao rolar. */
   backdrop-filter: saturate(180%) blur(14px);
   -webkit-backdrop-filter: saturate(180%) blur(14px);
   border-bottom: 1px solid var(--border);
@@ -340,6 +350,8 @@ a {
 
 .hero-title {
   font-family: var(--font-display);
+  /* clamp(mínimo, ideal, máximo): o título cresce com a largura da tela
+     (6vw) mas nunca fica menor que 2.2rem nem maior que 4rem. */
   font-size: clamp(2.2rem, 6vw, 4rem);
   font-weight: 800;
   line-height: 1.1;
@@ -380,6 +392,8 @@ a {
   box-shadow: var(--shadow-lg);
 }
 
+/* Faixa de brilho: um gradiente branco fica escondido à esquerda do botão
+   e atravessa até a direita no hover (translateX de -120% para 120%). */
 .btn-primary::before {
   content: "";
   position: absolute;
@@ -451,13 +465,16 @@ a {
   animation: fade-up 0.7s var(--ease) both;
 }
 
+/* Atraso crescente: os cards aparecem um depois do outro, em cascata. */
 .post-card:nth-child(2) { animation-delay: 0.08s; }
 .post-card:nth-child(3) { animation-delay: 0.16s; }
 .post-card:nth-child(4) { animation-delay: 0.24s; }
 .post-card:nth-child(5) { animation-delay: 0.32s; }
 .post-card:nth-child(6) { animation-delay: 0.4s; }
 
-/* Borda em gradiente que aparece no hover */
+/* Borda em gradiente que aparece no hover. CSS não aceita gradiente em
+   border, então um ::before com o gradiente cobre o card e a mask recorta
+   o miolo (content-box), sobrando só os 2px do padding como borda. */
 .post-card::before {
   content: "";
   position: absolute;
@@ -551,7 +568,9 @@ a {
   background-size: 100% 2px;
 }
 
-/* Faz o card inteiro ser clicável */
+/* Faz o card inteiro ser clicável: o ::after do link se estica por cima do
+   card todo (inset: 0), que é position: relative. Assim só existe um <a>,
+   o que é melhor para acessibilidade do que envolver o card num link. */
 .post-title a::after {
   content: "";
   position: absolute;
@@ -726,6 +745,8 @@ a {
   100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); }
 }
 
+/* Acessibilidade: quem ativou "reduzir movimento" no sistema (pessoas com
+   enjoo ou sensibilidade a animações) vê o site sem animações. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -753,6 +774,8 @@ a {
 
   .main-nav {
     display: grid;
+    /* Truque para animar altura "auto": a linha do grid vai de 0fr (fechado)
+       para 1fr (altura do conteúdo). Com height isso não daria para animar. */
     grid-template-rows: 0fr;
     width: 100%;
     order: 3;
@@ -763,6 +786,8 @@ a {
     overflow: hidden;
   }
 
+  /* "~" seleciona irmãos que vêm depois: quando o checkbox está marcado,
+     o menu abre. */
   .menu-toggle:checked ~ .main-nav {
     grid-template-rows: 1fr;
   }
