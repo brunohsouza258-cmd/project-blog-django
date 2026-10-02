@@ -6,11 +6,14 @@ Blog pessoal feito com **Django** e **Docker**, com sistema de contas, página d
 
 ## O que o blog faz
 
+- **Posts** escritos pelo painel admin: aparecem na hora na página inicial, com paginação, página própria, categorias, posts relacionados, tempo de leitura e capa. Rascunhos ficam visíveis só para o admin e posts com data futura são publicados automaticamente na data marcada.
+- **Busca** em português que entende variações das palavras ("programar" encontra "programação").
+- **Feed RSS** em `/feed/` para os leitores acompanharem os posts novos.
 - **Página inicial** com layout moderno, tema claro/escuro automático e versão para celular.
 - **Configuração pelo admin**: título, descrição, favicon, links do menu e quais partes do site aparecem (header, busca, menu, rodapé...) são editados no painel, sem mexer no código.
 - **Contas de usuário**: o visitante cria uma conta com nome, e-mail e senha, e entra com o e-mail. O dono do blog recebe um aviso por e-mail a cada novo cadastro.
 - **Feedback**: formulário para elogios, sugestões e problemas. As mensagens ficam salvas no admin (com marcação de "lido") e também são enviadas por e-mail.
-- **Assistente com IA local**: um chat flutuante, em todas as páginas, que responde **somente** sobre o blog (autor, contato, como criar conta, etc.). A IA roda no próprio computador com [Ollama](https://ollama.com), sem enviar as conversas para serviços externos.
+- **Assistente com IA local**: um chat flutuante, em todas as páginas, que responde **somente** sobre o blog (posts, autor, contato, como criar conta, etc.). A cada pergunta ele consulta os posts publicados mais recentes e os mais relacionados ao assunto, então conhece um post novo assim que ele é publicado, e responde com links clicáveis para os posts. A IA roda no próprio computador com [Ollama](https://ollama.com), sem enviar as conversas para serviços externos.
 
 ## Segurança
 
@@ -18,6 +21,7 @@ Blog pessoal feito com **Django** e **Docker**, com sistema de contas, página d
 - Armadilha invisível (honeypot) contra robôs de spam no feedback.
 - Content Security Policy, cookies `HttpOnly`/`Secure` e HTTPS obrigatório em produção.
 - Validação contra injeção em cabeçalhos de e-mail e contra links `javascript:` no menu.
+- Conteúdo dos posts e respostas da IA sempre exibidos como texto (sem HTML); no chat, só links do próprio blog ficam clicáveis.
 - Banco de dados e IA acessíveis apenas dentro do Docker.
 
 ## Tecnologias
@@ -60,6 +64,10 @@ Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/
 
 5. Acesse **http://localhost:8000**. O painel fica em **http://localhost:8000/admin**.
 
+### Publicando um post
+
+No admin, vá em **Posts → Adicionar**, preencha título, resumo e conteúdo (uma linha em branco entre parágrafos), marque **Publicado** e salve. O post aparece no site, no feed RSS e no assistente de IA na hora.
+
 ### Testes
 
 ```bash
@@ -70,7 +78,7 @@ docker compose exec djangoapp python manage.py test
 
 ```
 djangoapp/
-├── blog/         # páginas, templates e CSS do site
+├── blog/         # posts, categorias, busca, feed RSS, templates e CSS
 ├── site_setup/   # configurações do site editáveis pelo admin
 ├── accounts/     # cadastro, login e logout
 ├── feedback/     # formulário de feedback
