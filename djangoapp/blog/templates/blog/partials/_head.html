@@ -9,6 +9,9 @@
 
 <link rel="stylesheet" href="{% static 'blog/css/style.css' %}">
 
+{# Feed RSS: navegadores e leitores de feed descobrem os posts novos por aqui #}
+<link rel="alternate" type="application/rss+xml" title="{{ site_setup.title|default:'Blog' }}" href="{% url 'blog:feed' %}">
+
 {% if site_setup.favicon %}
     <link rel="shortcut icon" href="{{ site_setup.favicon.url }}" type="image/png">
 {% endif %}

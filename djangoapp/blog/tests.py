@@ -99,6 +99,13 @@ class PostPagesTests(TestCase):
         self.assertContains(response, 'Sobre Python')
         self.assertNotContains(response, 'Sobre Docker')
 
+    def test_rss_feed(self):
+        make_post('Post no feed')
+        make_post('Rascunho fora do feed', is_published=False)
+        response = self.client.get(reverse('blog:feed'))
+        self.assertContains(response, 'Post no feed')
+        self.assertNotContains(response, 'Rascunho fora do feed')
+
 
 class SearchTests(TestCase):
     def setUp(self):
