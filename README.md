@@ -73,7 +73,7 @@ Para preencher o blog com 15 posts sobre personalidades famosas (esporte, músic
 docker compose exec djangoapp python manage.py seed_posts
 ```
 
-12 posts são publicados com datas das últimas semanas e 3 ficam agendados para os próximos dias, aparecendo sozinhos no site. O comando pode ser executado mais de uma vez sem duplicar posts. O conteúdo fica em `djangoapp/blog/data/famosos.json`.
+12 posts são publicados com datas das últimas semanas e 3 ficam agendados para os próximos dias, aparecendo sozinhos no site. O comando também baixa as fotos de capa do [Wikimedia Commons](https://commons.wikimedia.org) (só imagens em domínio público ou Creative Commons, com o crédito do autor exibido no post). Pode ser executado mais de uma vez sem duplicar posts; se alguma foto falhar, rode de novo para baixar só as que faltaram (ou use `--sem-imagens` para pular as fotos). O conteúdo fica em `djangoapp/blog/data/famosos.json`.
 
 ### Publicando um post
 
