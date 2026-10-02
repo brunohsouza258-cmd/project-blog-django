@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'site_setup',
     'accounts',
     'feedback',
+    'chatbot',
 ]
 
 
@@ -205,6 +206,12 @@ FEEDBACK_EMAIL = os.getenv('FEEDBACK_EMAIL', 'bruno.h.souza158@gmail.com')
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'blog:index'
 LOGOUT_REDIRECT_URL = 'blog:index'
+
+
+# IA local (Ollama) usada pelo chat do site
+
+OLLAMA_URL = os.getenv('OLLAMA_URL', 'http://ollama:11434')
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'qwen2.5:3b')
 
 
 # Segurança

@@ -19,6 +19,8 @@ services:
     depends_on:
       psql:
         condition: service_healthy
+      ollama:
+        condition: service_started
     restart: unless-stopped
   psql:
     container_name: psql
@@ -38,3 +40,27 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  # IA local (Ollama). Roda na CPU; os modelos baixados ficam no volume
+  # "ollama_data" (fora do OneDrive, porque são arquivos grandes).
+  # Sem "ports": só o Django acessa, pelo endereço http://ollama:11434.
+  ollama:
+    container_name: ollama
+    # Versão fixa: "latest" pode trazer uma atualização inesperada.
+    image: ollama/ollama:0.35.1
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      # Mantém o modelo carregado na memória por 30 min após a última
+      # pergunta, para a próxima resposta não demorar a começar.
+      - OLLAMA_KEEP_ALIVE=30m
+      # No máximo 10 perguntas esperando na fila; as demais são recusadas
+      # na hora em vez de travar o servidor.
+      - OLLAMA_MAX_QUEUE=10
+    # Limite de recursos: mesmo com muitas perguntas, a IA não consegue
+    # usar toda a CPU e memória do seu PC.
+    cpus: 6
+    mem_limit: 5g
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
