@@ -1203,6 +1203,22 @@ a {
   border-bottom-right-radius: 4px;
 }
 
+/* Links do blog dentro das respostas da IA */
+.chat-message a {
+  color: var(--violet);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chat-message-user a {
+  color: #fff;
+}
+
+.chat-message a:hover {
+  color: var(--pink);
+}
+
 .chat-message.is-error {
   color: #ef4444;
 }

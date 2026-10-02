@@ -32,12 +32,46 @@
     }
   }
 
+  const URL_PATTERN = /(https?:\/\/[^\s<>"'()[\]]+)/g;
+  const MARKDOWN_LINK = /\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+
+  // Mostra o texto com os links do próprio blog clicáveis.
+  // Nunca usa innerHTML: cada pedaço vira um nó de texto ou um <a> criado
+  // pelo JavaScript, então HTML vindo da IA não é executado (proteção XSS).
+  function renderText(element, text) {
+    // A IA às vezes responde em Markdown: [texto](link) -> "texto link"
+    const plain = text.replace(MARKDOWN_LINK, '$1 $2');
+
+    element.replaceChildren();
+    plain.split(URL_PATTERN).forEach((part, index) => {
+      // split() com grupo de captura: as posições ímpares são as URLs.
+      if (index % 2 === 0) {
+        if (part) element.append(part);
+        return;
+      }
+
+      // Pontuação colada no fim ("veja http://.../post/.") não é do link.
+      const url = part.replace(/[.,;:!?]+$/, '');
+      const trailing = part.slice(url.length);
+
+      // Só links do próprio blog ficam clicáveis: a IA não consegue mandar
+      // o visitante para um site de fora.
+      if (url.startsWith(`${window.location.origin}/`)) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.textContent = new URL(url).pathname;
+        element.append(link);
+      } else {
+        element.append(url);
+      }
+      if (trailing) element.append(trailing);
+    });
+  }
+
   function addMessage(role, text) {
     const element = document.createElement('div');
     element.className = `chat-message chat-message-${role}`;
-    // textContent (e não innerHTML) impede que HTML vindo da IA ou do
-    // usuário seja executado na página (proteção contra XSS).
-    element.textContent = text;
+    renderText(element, text);
     messagesBox.appendChild(element);
     messagesBox.scrollTop = messagesBox.scrollHeight;
     return element;
@@ -114,7 +148,7 @@
         if (done) break;
         text += decoder.decode(value, { stream: true });
         answer.classList.remove('is-typing');
-        answer.textContent = text;
+        renderText(answer, text);
         messagesBox.scrollTop = messagesBox.scrollHeight;
       }
 

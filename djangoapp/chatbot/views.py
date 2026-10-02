@@ -111,7 +111,7 @@ def chat(request):
         )
 
     messages = [
-        {'role': 'system', 'content': build_system_prompt(request)},
+        {'role': 'system', 'content': build_system_prompt(request, message)},
         *_clean_history(data.get('history')),
         {'role': 'user', 'content': message},
     ]
