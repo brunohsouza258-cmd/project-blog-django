@@ -282,6 +282,14 @@ CACHES = {
 # visitante é o REMOTE_ADDR; veja utils/rate_limit.py.
 NUM_PROXIES = int(os.getenv('NUM_PROXIES', '0'))
 
+if NUM_PROXIES > 0:
+    # Atrás de um proxy com HTTPS (nginx, túnel da Cloudflare), a conexão
+    # do proxy até o Django é HTTP. O proxy avisa pelo X-Forwarded-Proto
+    # que o visitante usou HTTPS; sem isso o SECURE_SSL_REDIRECT entraria
+    # em loop. Só ativado com proxy, porque sem ele o visitante poderia
+    # forjar esse cabeçalho.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Endereço do painel admin. Troque no .env por algo difícil de adivinhar,
 # ex.: ADMIN_URL="painel-a8f3k2/". Sempre termine com "/".
 ADMIN_URL = os.getenv('ADMIN_URL', 'admin/').strip('/') + '/'

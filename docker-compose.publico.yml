@@ -1,0 +1,31 @@
+# Modo "público": deixa amigos acessarem o blog pela internet com um link
+# https://xxxx.trycloudflare.com, enquanto o seu PC e o Docker estão ligados.
+#
+# Ligar:     docker compose -f docker-compose.yml -f docker-compose.publico.yml up -d
+# Ver link:  docker compose -f docker-compose.yml -f docker-compose.publico.yml logs tunnel
+# Desligar:  docker compose up -d --force-recreate djangoapp && docker compose rm -sf tunnel
+#
+# Os valores abaixo têm prioridade sobre o .env só neste modo.
+services:
+  djangoapp:
+    environment:
+      # Produção: gunicorn, CSP bloqueando e sem páginas de erro detalhadas
+      # (que mostrariam configurações internas para qualquer visitante).
+      DEBUG: "0"
+      # O link muda a cada vez que o túnel liga, então aceita qualquer
+      # subdomínio do trycloudflare.com (o ponto no início faz isso).
+      ALLOWED_HOSTS: ".trycloudflare.com,localhost,127.0.0.1"
+      CSRF_TRUSTED_ORIGINS: "https://*.trycloudflare.com"
+      # O túnel é um proxy: o IP real do visitante vem no X-Forwarded-For
+      # e o HTTPS é feito pela Cloudflare (X-Forwarded-Proto).
+      NUM_PROXIES: "1"
+
+  # Túnel da Cloudflare: abre uma conexão de SAÍDA do seu PC até a
+  # Cloudflare, então não precisa abrir portas no roteador.
+  tunnel:
+    container_name: tunnel
+    image: cloudflare/cloudflared:2026.9.3
+    command: tunnel --no-autoupdate --url http://djangoapp:8000
+    depends_on:
+      - djangoapp
+    restart: unless-stopped
