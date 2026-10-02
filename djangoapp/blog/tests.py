@@ -193,6 +193,22 @@ class SeedPostsCommandTests(TestCase):
 
 
 class HeaderAndCoverTests(TestCase):
+    def test_logged_user_name_and_initial_in_header(self):
+        user = User.objects.create_user(
+            'maria@email.com', 'maria@email.com', 'x', first_name='Maria'
+        )
+        self.client.force_login(user)
+        response = self.client.get(reverse('blog:index'))
+        # Chip do celular + saudação do computador
+        self.assertContains(response, 'class="user-chip"')
+        self.assertContains(response, '<span class="user-name">Maria</span>')
+        self.assertContains(response, 'Olá, <strong>Maria</strong>')
+        self.assertContains(response, '>M</span>')
+
+    def test_visitor_does_not_see_user_chip(self):
+        response = self.client.get(reverse('blog:index'))
+        self.assertNotContains(response, 'class="user-chip"')
+
     def test_cover_credit_is_shown_with_link(self):
         post = make_post(
             'Com capa', cover='posts/teste.jpg',

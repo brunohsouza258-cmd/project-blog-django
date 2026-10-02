@@ -883,8 +883,48 @@ a {
 }
 
 .auth-greeting {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 0.9rem;
   color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Bolinha com a inicial do nome de quem está logado */
+.user-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--gradient);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* Chip "inicial + nome" que aparece só no celular, ao lado do menu */
+.user-chip {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  max-width: 45%;
+  margin-left: auto;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.88rem;
+  font-weight: 600;
+  animation: fade-up 0.5s var(--ease) both;
+}
+
+/* Nome comprido termina com "..." em vez de empurrar o menu para fora */
+.user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -1386,6 +1426,30 @@ a {
     display: grid;
   }
 
+  .user-chip {
+    display: inline-flex;
+    max-width: 140px;
+  }
+
+  /* Logo, chip e botão precisam caber numa linha só, mesmo em 360px:
+     espaço menor entre eles, e o título do site também vira "..." */
+  .header-inner {
+    column-gap: 8px;
+  }
+
+  .logo {
+    min-width: 0;
+  }
+
+  .logo .gradient-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Com o chip, é ele que empurra os dois para a direita */
+  .user-chip ~ .menu-button {
+    margin-left: 8px;
+  }
 
   .main-nav {
     display: grid;

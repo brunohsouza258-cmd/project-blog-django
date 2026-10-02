@@ -11,6 +11,13 @@
             (botão hambúrguer) marca/desmarca ele. O CSS usa :checked para
             abrir o menu. Veja ".menu-toggle:checked" no style.css.
         {% endcomment %}
+        {# No celular, o "Olá, Nome" fica escondido dentro do menu; este chip mostra quem está logado sem precisar abrir #}
+        {% if user.is_authenticated %}
+            <span class="user-chip" title="{{ user.first_name|default:user.email }}">
+                <span class="user-avatar" aria-hidden="true">{{ user.first_name|default:user.email|first|upper }}</span>
+                <span class="user-name">{{ user.first_name|default:user.email }}</span>
+            </span>
+        {% endif %}
         <input type="checkbox" id="menu-toggle" class="menu-toggle">
         <label for="menu-toggle" class="menu-button" aria-label="Abrir menu">
             <span></span>
@@ -52,7 +59,10 @@
                 {# "user" vem do context processor de auth do Django #}
                 <div class="auth-links">
                     {% if user.is_authenticated %}
-                        <span class="auth-greeting">Olá, <strong>{{ user.first_name|default:user.email }}</strong></span>
+                        <span class="auth-greeting">
+                            <span class="user-avatar" aria-hidden="true">{{ user.first_name|default:user.email|first|upper }}</span>
+                            Olá, <strong>{{ user.first_name|default:user.email }}</strong>
+                        </span>
                         <form action="{% url 'accounts:logout' %}" method="post">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-ghost btn-sm">Sair</button>
