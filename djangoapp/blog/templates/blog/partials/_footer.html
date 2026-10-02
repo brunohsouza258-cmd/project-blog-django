@@ -1,1 +1,21 @@
- <h1>FOOTER</h1>
+<footer class="site-footer">
+    <div class="container footer-inner">
+        <p class="footer-text">
+            &copy; {% now "Y" %} <strong class="gradient-text">{{ site_setup.title|default:"Blog" }}</strong>.
+            Todos os direitos reservados.
+        </p>
+
+        {% if site_setup.menulink_set.exists %}
+            <ul class="footer-links">
+                {% for link in site_setup.menulink_set.all %}
+                    <li>
+                        <a href="{{ link.url_or_path }}"
+                           {% if link.new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.text }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <a href="#topo" class="back-to-top" aria-label="Voltar ao topo">&uarr;</a>
+    </div>
+</footer>

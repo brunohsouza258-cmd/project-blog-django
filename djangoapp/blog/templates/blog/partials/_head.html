@@ -3,10 +3,18 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap">
+
 <link rel="stylesheet" href="{% static 'blog/css/style.css' %}">
 
 {% if site_setup.favicon %}
     <link rel="shortcut icon" href="{{ site_setup.favicon.url }}" type="image/png">
 {% endif %}
 
-<title>TESTANDO</title>
+{% if site_setup.description %}
+    <meta name="description" content="{{ site_setup.description }}">
+{% endif %}
+
+<title>{{ site_setup.title|default:"Blog" }}</title>

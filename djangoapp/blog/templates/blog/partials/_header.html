@@ -1,1 +1,41 @@
- <h1>HEADER</h1>
+<header class="site-header">
+    <div class="container header-inner">
+        <a href="{% url 'blog:index' %}" class="logo">
+            <span class="logo-mark">{{ site_setup.title|default:"B"|first|upper }}</span>
+            <span class="gradient-text">{{ site_setup.title|default:"Blog" }}</span>
+        </a>
+
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="menu-button" aria-label="Abrir menu">
+            <span></span>
+        </label>
+
+        <nav class="main-nav" aria-label="Menu principal">
+            <div class="nav-content">
+                {% if not site_setup or site_setup.show_menu %}
+                    <ul class="menu">
+                        <li><a href="{% url 'blog:index' %}" class="menu-link">Início</a></li>
+                        {% for link in site_setup.menulink_set.all %}
+                            <li>
+                                <a href="{{ link.url_or_path }}" class="menu-link"
+                                   {% if link.new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                                    {{ link.text }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% if not site_setup or site_setup.show_search %}
+                    <form class="search-form" action="{% url 'blog:index' %}" method="get" role="search">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7"></circle>
+                            <path d="m20 20-3.5-3.5"></path>
+                        </svg>
+                        <input type="search" name="q" class="search-input" placeholder="Buscar posts..." value="{{ request.GET.q }}" aria-label="Buscar posts">
+                    </form>
+                {% endif %}
+            </div>
+        </nav>
+    </div>
+</header>
