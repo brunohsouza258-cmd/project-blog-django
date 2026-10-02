@@ -93,6 +93,22 @@ Com `DEBUG="0"` no `.env`, o container sobe com **gunicorn** em vez do servidor 
 
 O site precisa de HTTPS em produção: os cookies de login só trafegam por conexão segura.
 
+### Mostrar para amigos (link público)
+
+Para outras pessoas acessarem o blog pela internet enquanto seu computador estiver ligado, use o modo público. Ele roda o site em modo produção e cria um link `https://xxxx.trycloudflare.com` com um túnel gratuito da Cloudflare, sem abrir portas no roteador e sem criar conta:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.publico.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.publico.yml logs tunnel   # mostra o link
+```
+
+O link muda sempre que o túnel reinicia. Nesse modo, acesse o site pelo link (não pelo `localhost:8000`). Para voltar ao modo de desenvolvimento:
+
+```bash
+docker compose rm -sf tunnel
+docker compose up -d --force-recreate djangoapp
+```
+
 ### Testes
 
 ```bash
