@@ -264,3 +264,22 @@ else:
     # 1 hora; aumente para 31536000 (1 ano) quando tudo estiver estável.
     SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '3600'))
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+
+# Cache no banco de dados: guarda os limites de tentativas por IP. Diferente
+# do cache na memória, não zera ao reiniciar o container e é compartilhado
+# entre os processos do gunicorn. Tabela criada pelo "createcachetable".
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'django_cache',
+    }
+}
+
+# Quantos proxies (ex.: nginx) ficam na frente do Django. Com 0, o IP do
+# visitante é o REMOTE_ADDR; veja utils/rate_limit.py.
+NUM_PROXIES = int(os.getenv('NUM_PROXIES', '0'))
+
+# Endereço do painel admin. Troque no .env por algo difícil de adivinhar,
+# ex.: ADMIN_URL="painel-a8f3k2/". Sempre termine com "/".
+ADMIN_URL = os.getenv('ADMIN_URL', 'admin/').strip('/') + '/'

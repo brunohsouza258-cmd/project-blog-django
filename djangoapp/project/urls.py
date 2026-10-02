@@ -19,12 +19,20 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from utils.rate_limit import rate_limit_post
+
+# O login do admin é do próprio Django, então o limite de tentativas é
+# aplicado "por fora": no máximo 5 tentativas a cada 15 minutos por IP.
+admin.site.login = rate_limit_post('admin-login', 5, 60 * 15)(admin.site.login)
+
 urlpatterns = [
     path('', include('blog.urls')),
     path('conta/', include('accounts.urls')),
     path('feedback/', include('feedback.urls')),
     path('chat/', include('chatbot.urls')),
-    path('admin/', admin.site.urls),
+    # Endereço do admin vem do .env (ADMIN_URL). Um endereço secreto evita
+    # que robôs fiquem testando senhas em /admin/.
+    path(settings.ADMIN_URL, admin.site.urls),
 ]
 
 if settings.DEBUG:
