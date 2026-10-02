@@ -47,6 +47,20 @@
                         <input type="search" name="q" class="search-input" placeholder="Buscar posts..." value="{{ request.GET.q }}" aria-label="Buscar posts">
                     </form>
                 {% endif %}
+
+                {# "user" vem do context processor de auth do Django #}
+                <div class="auth-links">
+                    {% if user.is_authenticated %}
+                        <span class="auth-greeting">Olá, <strong>{{ user.first_name|default:user.email }}</strong></span>
+                        <form action="{% url 'accounts:logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-ghost btn-sm">Sair</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-ghost btn-sm">Entrar</a>
+                        <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm">Criar conta</a>
+                    {% endif %}
+                </div>
             </div>
         </nav>
     </div>

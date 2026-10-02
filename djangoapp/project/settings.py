@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'blog',
     'site_setup',
+    'accounts',
 ]
 
 
@@ -175,6 +176,15 @@ MEDIA_ROOT = DATA_DIR / 'media'
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+# Autenticação
+# Para onde o usuário vai quando precisa estar logado, depois de entrar e
+# depois de sair.
+
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'blog:index'
+LOGOUT_REDIRECT_URL = 'blog:index'
 
 
 # Segurança

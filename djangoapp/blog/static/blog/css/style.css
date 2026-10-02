@@ -740,6 +740,212 @@ a {
 }
 
 /* ==========================================================================
+   Conta (cadastro, login e botões do header)
+   ========================================================================== */
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+.btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-ghost {
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  transform: translateY(-2px);
+  border-color: var(--violet);
+  color: var(--violet);
+}
+
+.auth-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-links form {
+  display: contents;
+}
+
+.auth-greeting {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.auth-greeting strong {
+  color: var(--text);
+}
+
+.auth {
+  display: grid;
+  place-items: center;
+  padding: 64px 0 80px;
+}
+
+.auth-card {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 40px 36px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  animation: fade-up 0.6s var(--ease) both;
+}
+
+/* Faixa de gradiente no topo do card */
+.auth-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 24px auto;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--gradient);
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.auth-subtitle {
+  margin-bottom: 28px;
+  color: var(--text-muted);
+}
+
+.auth-form {
+  display: grid;
+  gap: 18px;
+}
+
+.form-group {
+  display: grid;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Estiliza os inputs que o Django gera ({{ field }}) sem precisar de classe */
+.auth-form input:not([type="hidden"]) {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  transition: border-color 0.25s, box-shadow 0.25s, background-color 0.25s;
+}
+
+.auth-form input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.auth-form input:hover {
+  border-color: var(--text-muted);
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--violet);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+}
+
+.has-error input:not([type="hidden"]) {
+  border-color: #ef4444;
+}
+
+.has-error input:focus {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18);
+}
+
+.form-error {
+  font-size: 0.85rem;
+  color: #ef4444;
+}
+
+.form-help {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.form-alert {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  font-size: 0.9rem;
+}
+
+.auth-switch {
+  margin-top: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.auth-switch a {
+  font-weight: 600;
+  color: var(--violet);
+}
+
+.auth-switch a:hover {
+  color: var(--pink);
+}
+
+/* Mensagens (messages framework): aparecem e somem sozinhas */
+.messages {
+  position: fixed;
+  top: 88px;
+  left: 50%;
+  z-index: 60;
+  display: grid;
+  gap: 8px;
+  width: min(100% - 32px, 420px);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.message {
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--violet);
+  box-shadow: var(--shadow-lg);
+  font-weight: 500;
+  animation: toast 4.5s var(--ease) both;
+}
+
+.message-success { border-left-color: #22c55e; }
+.message-error { border-left-color: #ef4444; }
+.message-warning { border-left-color: var(--amber); }
+.message-info { border-left-color: var(--cyan); }
+
+@keyframes toast {
+  0% { opacity: 0; transform: translateY(-12px); }
+  8%, 85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-12px); visibility: hidden; }
+}
+
+/* ==========================================================================
    Animações
    ========================================================================== */
 
@@ -819,6 +1025,15 @@ a {
 
   .search-form {
     padding-bottom: 8px;
+  }
+
+  .auth-links {
+    flex-wrap: wrap;
+    padding-bottom: 12px;
+  }
+
+  .auth-card {
+    padding: 32px 22px;
   }
 
   .search-input,

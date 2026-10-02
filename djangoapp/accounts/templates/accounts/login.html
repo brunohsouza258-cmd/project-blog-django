@@ -1,0 +1,26 @@
+{% extends "blog/partials/base.html" %}
+
+{% block content %}
+    <section class="auth container">
+        <div class="auth-card">
+            <h1 class="auth-title">Entrar</h1>
+            <p class="auth-subtitle">Bom te ver de novo.</p>
+
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                {% include "accounts/_form_fields.html" %}
+
+                {# "next" leva o usuário de volta à página que ele tentou acessar #}
+                <input type="hidden" name="next" value="{{ next }}">
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Entrar <span class="btn-arrow">&rarr;</span>
+                </button>
+            </form>
+
+            <p class="auth-switch">
+                Não tem conta? <a href="{% url 'accounts:register' %}">Criar conta</a>
+            </p>
+        </div>
+    </section>
+{% endblock content %}

@@ -1,0 +1,28 @@
+{% extends "blog/partials/base.html" %}
+
+{% block content %}
+    <section class="auth container">
+        <div class="auth-card">
+            <h1 class="auth-title">Criar <span class="gradient-text">conta</span></h1>
+            <p class="auth-subtitle">Leva menos de um minuto.</p>
+
+            {# novalidate: deixa o Django validar e mostrar as mensagens em português #}
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                {% include "accounts/_form_fields.html" %}
+
+                <p class="form-help">
+                    A senha precisa ter pelo menos 8 caracteres e não pode ser só números.
+                </p>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Criar minha conta <span class="btn-arrow">&rarr;</span>
+                </button>
+            </form>
+
+            <p class="auth-switch">
+                Já tem conta? <a href="{% url 'accounts:login' %}">Entrar</a>
+            </p>
+        </div>
+    </section>
+{% endblock content %}
