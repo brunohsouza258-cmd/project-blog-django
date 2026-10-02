@@ -607,6 +607,90 @@ a {
 }
 
 /* ==========================================================================
+   Página do post
+   ========================================================================== */
+
+/* Páginas sem o destaque de boas-vindas (busca, categoria, página 2...) */
+.posts-page {
+  padding-top: 56px;
+}
+
+.post-page {
+  max-width: 760px;
+  padding: 56px 0 64px;
+  animation: fade-up 0.6s var(--ease) both;
+}
+
+.draft-banner {
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--amber);
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.post-header {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.post-chip {
+  justify-self: start;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--gradient);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: transform 0.25s var(--ease);
+}
+
+.post-chip:hover {
+  transform: translateY(-2px);
+}
+
+.post-page-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.post-lead {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+}
+
+.post-page-cover {
+  width: 100%;
+  margin-bottom: 40px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Texto do post: largura e espaçamento confortáveis para leitura longa */
+.post-content {
+  font-size: 1.12rem;
+  line-height: 1.85;
+}
+
+.post-content p + p {
+  margin-top: 1.3em;
+}
+
+/* Como a capa é opcional, o card mostra o gradiente quando não há imagem */
+.post-cover img {
+  position: absolute;
+  inset: 0;
+}
+
+/* ==========================================================================
    Paginação
    ========================================================================== */
 

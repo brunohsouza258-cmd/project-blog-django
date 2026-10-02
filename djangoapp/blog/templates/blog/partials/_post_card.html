@@ -1,0 +1,19 @@
+<article class="post-card">
+    <div class="post-cover">
+        {% if post.cover %}
+            <img src="{{ post.cover.url }}" alt="" loading="lazy">
+        {% endif %}
+        {% if post.category %}
+            <span class="post-category">{{ post.category.name }}</span>
+        {% endif %}
+    </div>
+    <div class="post-body">
+        <div class="post-meta">
+            <time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:"d/m/Y" }}</time>
+            <span>&middot; {{ post.reading_time }} min de leitura</span>
+        </div>
+        <h3 class="post-title"><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h3>
+        <p class="post-excerpt">{{ post.excerpt }}</p>
+        <span class="post-read-more">Ler mais <span class="btn-arrow">&rarr;</span></span>
+    </div>
+</article>

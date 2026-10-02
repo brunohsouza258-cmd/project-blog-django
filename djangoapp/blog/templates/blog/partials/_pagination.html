@@ -1,9 +1,10 @@
 {% if page_obj and page_obj.paginator.num_pages > 1 %}
+    {# Mantém a busca (?q=) ao trocar de página #}
     <nav class="container" aria-label="Paginação">
         <ul class="pagination">
             <li>
                 {% if page_obj.has_previous %}
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Página anterior">&larr;</a>
+                    <a class="page-link" href="?{% if q %}q={{ q|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Página anterior">&larr;</a>
                 {% else %}
                     <span class="page-link is-disabled">&larr;</span>
                 {% endif %}
@@ -11,14 +12,14 @@
 
             {% for number in page_obj.paginator.page_range %}
                 <li>
-                    <a class="page-link{% if number == page_obj.number %} is-active{% endif %}" href="?page={{ number }}"
+                    <a class="page-link{% if number == page_obj.number %} is-active{% endif %}" href="?{% if q %}q={{ q|urlencode }}&{% endif %}page={{ number }}"
                        {% if number == page_obj.number %}aria-current="page"{% endif %}>{{ number }}</a>
                 </li>
             {% endfor %}
 
             <li>
                 {% if page_obj.has_next %}
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Próxima página">&rarr;</a>
+                    <a class="page-link" href="?{% if q %}q={{ q|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="Próxima página">&rarr;</a>
                 {% else %}
                     <span class="page-link is-disabled">&rarr;</span>
                 {% endif %}

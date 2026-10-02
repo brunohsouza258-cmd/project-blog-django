@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
     {% include "blog/partials/_head.html" %}
+    <title>{% block title %}{{ site_setup.title|default:"Blog" }}{% endblock title %}</title>
 </head>
 <body id="topo">
     {% comment %}

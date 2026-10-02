@@ -8,3 +8,9 @@ from django.core.exceptions import ValidationError
 def validate_png(image):
     if not image.name.lower().endswith('.png'):
         raise ValidationError('Imagem precisa ser PNG')
+
+
+def validate_cover_image(image):
+    allowed = ('.jpg', '.jpeg', '.png', '.webp')
+    if not image.name.lower().endswith(allowed):
+        raise ValidationError('A capa precisa ser JPG, PNG ou WEBP.')

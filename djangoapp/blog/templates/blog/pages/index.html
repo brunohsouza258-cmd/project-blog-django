@@ -1,44 +1,45 @@
 {% extends "blog/partials/base.html" %}
 
 {% block content %}
-    <section class="hero container">
-        <span class="hero-badge">Últimas publicações</span>
-        <h1 class="hero-title">
-            Bem-vindo ao <span class="gradient-text">{{ site_setup.title|default:"Blog" }}</span>
-        </h1>
-        {% if not site_setup or site_setup.show_description %}
-            <p class="hero-description">
-                {{ site_setup.description|default:"Ideias, tutoriais e novidades sobre tecnologia e desenvolvimento." }}
-            </p>
-        {% endif %}
-        <a href="#posts" class="btn btn-primary">
-            Ler os posts <span class="btn-arrow">&rarr;</span>
-        </a>
-    </section>
+    {% if show_hero %}
+        <section class="hero container">
+            <span class="hero-badge">Últimas publicações</span>
+            <h1 class="hero-title">
+                Bem-vindo ao <span class="gradient-text">{{ site_setup.title|default:"Blog" }}</span>
+            </h1>
+            {% if not site_setup or site_setup.show_description %}
+                <p class="hero-description">
+                    {{ site_setup.description|default:"Ideias, tutoriais e novidades sobre tecnologia e desenvolvimento." }}
+                </p>
+            {% endif %}
+            <a href="#posts" class="btn btn-primary">
+                Ler os posts <span class="btn-arrow">&rarr;</span>
+            </a>
+        </section>
+    {% endif %}
 
-    <section id="posts" class="container">
-        <h2 class="section-title">Últimos posts</h2>
+    <section id="posts" class="container{% if not show_hero %} posts-page{% endif %}">
+        {% if q %}
+            <h1 class="section-title">Resultados para “{{ q }}”</h1>
+        {% elif category %}
+            <h1 class="section-title">Categoria: {{ category.name }}</h1>
+        {% elif show_hero %}
+            <h2 class="section-title">Últimos posts</h2>
+        {% else %}
+            <h1 class="section-title">Todos os posts</h1>
+        {% endif %}
 
         <div class="posts-grid">
-            {# Cards de exemplo: troque por um for nos posts quando criar o model Post #}
-            {% for i in "123456" %}
-                <article class="post-card">
-                    <div class="post-cover">
-                        <span class="post-category">Exemplo</span>
-                    </div>
-                    <div class="post-body">
-                        <div class="post-meta">
-                            <span>{% now "d/m/Y" %}</span>
-                            <span>&middot; 5 min de leitura</span>
-                        </div>
-                        <h3 class="post-title"><a href="#">Título do post de exemplo {{ i }}</a></h3>
-                        <p class="post-excerpt">
-                            Este é um card de exemplo para mostrar o visual do blog. Ele será
-                            substituído pelos seus posts de verdade.
-                        </p>
-                        <span class="post-read-more">Ler mais <span class="btn-arrow">&rarr;</span></span>
-                    </div>
-                </article>
+            {% for post in page_obj %}
+                {% include "blog/partials/_post_card.html" %}
+            {% empty %}
+                <div class="empty-state">
+                    {% if q %}
+                        <p>Nenhum post encontrado para “{{ q }}”. Tente outras palavras.</p>
+                    {% else %}
+                        <p>Nenhum post publicado ainda. Volte em breve!</p>
+                    {% endif %}
+                </div>
             {% endfor %}
         </div>
     </section>

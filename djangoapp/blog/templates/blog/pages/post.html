@@ -1,0 +1,43 @@
+{% extends "blog/partials/base.html" %}
+
+{% block title %}{{ post.title }} | {{ site_setup.title|default:"Blog" }}{% endblock title %}
+
+{% block content %}
+    <article class="post-page container">
+        {% if not post.is_published %}
+            <p class="draft-banner">Rascunho: só você (admin) está vendo este post.</p>
+        {% endif %}
+
+        <header class="post-header">
+            {% if post.category %}
+                <a href="{{ post.category.get_absolute_url }}" class="post-chip">{{ post.category.name }}</a>
+            {% endif %}
+            <h1 class="post-page-title">{{ post.title }}</h1>
+            <p class="post-lead">{{ post.excerpt }}</p>
+            <div class="post-meta">
+                <time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:"d \d\e F \d\e Y"|lower }}</time>
+                <span>&middot; {{ post.reading_time }} min de leitura</span>
+            </div>
+        </header>
+
+        {% if post.cover %}
+            <img class="post-page-cover" src="{{ post.cover.url }}" alt="">
+        {% endif %}
+
+        {# linebreaks transforma as linhas em branco em parágrafos. O texto continua escapado (sem HTML), então é seguro. #}
+        <div class="post-content">
+            {{ post.content|linebreaks }}
+        </div>
+    </article>
+
+    {% if related %}
+        <section class="container">
+            <h2 class="section-title">Posts relacionados</h2>
+            <div class="posts-grid">
+                {% for post in related %}
+                    {% include "blog/partials/_post_card.html" %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+{% endblock content %}
