@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 from pathlib import Path
 import os
 
+from django.utils.csp import CSP
 from dotenv import load_dotenv
 
 
@@ -70,6 +71,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.csp.ContentSecurityPolicyMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -173,3 +175,55 @@ MEDIA_ROOT = DATA_DIR / 'media'
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+# Segurança
+# https://docs.djangoproject.com/en/6.1/topics/security/
+
+# Domínios extras aceitos em formulários (POST). Em produção, coloque o
+# endereço do site no .env, ex.: CSRF_TRUSTED_ORIGINS="https://meublog.com"
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origin.strip()
+]
+
+# JavaScript da página não consegue ler os cookies de sessão e CSRF.
+# (O chat pega o token CSRF do formulário, não do cookie.)
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+
+# Content Security Policy: diz ao navegador de onde a página pode carregar
+# scripts, estilos, fontes e imagens. Se alguém conseguir injetar um
+# <script> malicioso, o navegador se recusa a executá-lo.
+_csp = {
+    'default-src': [CSP.SELF],
+    'script-src': [CSP.SELF],
+    'style-src': [CSP.SELF, 'https://fonts.googleapis.com'],
+    'font-src': [CSP.SELF, 'https://fonts.gstatic.com'],
+    'img-src': [CSP.SELF, 'data:'],
+    'connect-src': [CSP.SELF],
+    'object-src': [CSP.NONE],
+    'base-uri': [CSP.SELF],
+    'form-action': [CSP.SELF],
+    'frame-ancestors': [CSP.NONE],
+}
+
+if DEBUG:
+    # Em desenvolvimento só avisa no console do navegador, sem bloquear,
+    # porque a página de erro do Django usa scripts e estilos inline.
+    SECURE_CSP_REPORT_ONLY = _csp
+else:
+    SECURE_CSP = _csp
+
+    # Configurações que só fazem sentido com HTTPS (produção).
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', '1') == '1'
+    # HSTS: o navegador passa a usar só HTTPS neste domínio. Começa com
+    # 1 hora; aumente para 31536000 (1 ano) quando tudo estiver estável.
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '3600'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True

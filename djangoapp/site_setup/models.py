@@ -1,6 +1,7 @@
 from django.db import models
 from utils.images import resize_image
 from utils.model_validators import validate_png
+from utils.validators import validate_safe_url
 
 
 class MenuLink(models.Model):
@@ -9,7 +10,9 @@ class MenuLink(models.Model):
         verbose_name_plural = 'Menu Links'
 
     text = models.CharField(max_length=50)
-    url_or_path = models.CharField(max_length=2048)
+    url_or_path = models.CharField(
+        max_length=2048, validators=[validate_safe_url]
+    )
     new_tab = models.BooleanField(default=False)
     site_setup = models.ForeignKey(
         'SiteSetup', on_delete=models.CASCADE, blank=True, null=True,
