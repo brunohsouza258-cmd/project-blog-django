@@ -22,9 +22,8 @@
 
         {# aria-live: leitores de tela anunciam as respostas novas #}
         <div class="chat-messages" id="chat-messages" aria-live="polite">
-            <div class="chat-message chat-message-assistant">
-                Olá! Posso ajudar com dúvidas sobre o blog, como criar conta ou falar com o Bruno. 😊
-            </div>
+            {# Texto colado nas tags: o balão usa white-space: pre-wrap (para manter as quebras de linha da IA), então espaços e quebras aqui apareceriam na tela #}
+            <div class="chat-message chat-message-assistant">Olá! Posso ajudar com dúvidas sobre o blog, como criar conta ou falar com o Bruno. 😊</div>
         </div>
 
         <form class="chat-form" id="chat-form">
