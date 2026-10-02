@@ -17,7 +17,8 @@ Blog pessoal feito com **Django** e **Docker**, com sistema de contas, página d
 
 ## Segurança
 
-- Limite de tentativas por IP no login (contra força bruta), no cadastro, no feedback e no chat.
+- Limite de tentativas por IP no login do site e do admin (contra força bruta), no cadastro, no feedback e no chat. Os contadores ficam no banco e não zeram ao reiniciar.
+- Endereço do painel admin configurável (`ADMIN_URL`), para não ficar no óbvio `/admin/`.
 - Armadilha invisível (honeypot) contra robôs de spam no feedback.
 - Content Security Policy, cookies `HttpOnly`/`Secure` e HTTPS obrigatório em produção.
 - Validação contra injeção em cabeçalhos de e-mail e contra links `javascript:` no menu.
@@ -77,6 +78,20 @@ docker compose exec djangoapp python manage.py seed_posts
 ### Publicando um post
 
 No admin, vá em **Posts → Adicionar**, preencha título, resumo e conteúdo (uma linha em branco entre parágrafos), marque **Publicado** e salve. O post aparece no site, no feed RSS e no assistente de IA na hora.
+
+### Produção
+
+Com `DEBUG="0"` no `.env`, o container sobe com **gunicorn** em vez do servidor de desenvolvimento, e o CSS/JS é servido comprimido e com cache pelo WhiteNoise. Antes de publicar, configure no `.env`:
+
+| Variável | Para quê |
+|---|---|
+| `SECRET_KEY` | Chave longa e aleatória |
+| `ALLOWED_HOSTS` / `CSRF_TRUSTED_ORIGINS` | Domínio do site (ex.: `meublog.com` / `https://meublog.com`) |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` | Usuário do banco sem poderes de superusuário e senha forte |
+| `ADMIN_URL` | Endereço secreto do painel (ex.: `painel-xk29fm/`) |
+| `NUM_PROXIES` | `1` se houver um nginx na frente do Django, para identificar o IP real dos visitantes |
+
+O site precisa de HTTPS em produção: os cookies de login só trafegam por conexão segura.
 
 ### Testes
 
