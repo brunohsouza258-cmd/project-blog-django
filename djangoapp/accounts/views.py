@@ -9,13 +9,14 @@ from django.contrib.auth.views import (
 from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 
 from accounts.context_processors import display_name
 from accounts.forms import (
-    DeleteAccountForm, EmailAuthenticationForm, EmailPasswordResetForm,
-    ProfileForm, RegisterForm,
+    AvatarForm, DeleteAccountForm, EmailAuthenticationForm,
+    EmailPasswordResetForm, ProfileForm, RegisterForm,
 )
+from accounts.models import Profile
 from site_setup.models import SiteSetup
 from utils.rate_limit import is_rate_limited
 
@@ -99,7 +100,10 @@ def profile(request):
         messages.success(request, 'Dados atualizados.')
         return redirect('accounts:profile')
 
-    return render(request, 'accounts/profile.html', {'form': form})
+    return render(request, 'accounts/profile.html', {
+        'form': form,
+        'avatar_form': AvatarForm(),
+    })
 
 
 class AccountPasswordChangeView(PasswordChangeView):
@@ -188,3 +192,33 @@ class AccountPasswordResetConfirmView(PasswordResetConfirmView):
 
 class AccountPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'accounts/password_reset_complete.html'
+
+
+@login_required
+@require_POST
+def avatar_update(request):
+    """Envia, troca ou remove a foto de perfil."""
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if 'remove' in request.POST:
+        if profile.avatar:
+            profile.avatar.delete(save=True)  # apaga o arquivo também
+            messages.info(request, 'Foto removida.')
+        return redirect('accounts:profile')
+
+    # Até 10 envios por hora: processar imagem gasta CPU do servidor.
+    if is_rate_limited(request, f'avatar:{request.user.pk}', 10, 60 * 60):
+        messages.error(request, TOO_MANY_ATTEMPTS)
+        return redirect('accounts:profile')
+
+    form = AvatarForm(request.POST, request.FILES)
+    if not form.is_valid():
+        messages.error(request, form.errors['avatar'][0])
+        return redirect('accounts:profile')
+
+    new_avatar = form.processed_avatar()
+    if profile.avatar:
+        profile.avatar.delete(save=False)  # não deixa a foto antiga no disco
+    profile.avatar.save(new_avatar.name, new_avatar, save=True)
+    messages.success(request, 'Foto atualizada.')
+    return redirect('accounts:profile')

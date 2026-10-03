@@ -50,5 +50,8 @@
     {% endif %}
 
     {% include "chatbot/_widget.html" %}
+
+    {# Scripts extras de cada página (arquivos .js, nunca código inline: a CSP bloqueia) #}
+    {% block scripts %}{% endblock scripts %}
 </body>
 </html>

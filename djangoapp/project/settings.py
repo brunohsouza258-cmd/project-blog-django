@@ -248,7 +248,8 @@ _csp = {
     'script-src': [CSP.SELF],
     'style-src': [CSP.SELF, 'https://fonts.googleapis.com'],
     'font-src': [CSP.SELF, 'https://fonts.gstatic.com'],
-    'img-src': [CSP.SELF, 'data:'],
+    # blob: = prévia local da foto de perfil antes de enviar (avatar.js)
+    'img-src': [CSP.SELF, 'data:', 'blob:'],
     'connect-src': [CSP.SELF],
     'object-src': [CSP.NONE],
     'base-uri': [CSP.SELF],

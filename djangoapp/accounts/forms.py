@@ -1,8 +1,12 @@
+from io import BytesIO
+
 from django import forms
 from django.contrib.auth.forms import (
     AuthenticationForm, PasswordResetForm, UserCreationForm,
 )
 from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
+from PIL import Image, ImageOps
 
 from utils.validators import validate_single_line
 
@@ -149,3 +153,65 @@ class EmailPasswordResetForm(PasswordResetForm):
             'autofocus': True,
         }),
     )
+
+
+AVATAR_MAX_BYTES = 2 * 1024 * 1024  # 2 MB
+AVATAR_MAX_PIXELS = 25_000_000      # ~5000x5000
+AVATAR_SIZE = 256                   # foto final: 256x256
+AVATAR_FORMATS = {'JPEG', 'PNG', 'WEBP'}
+
+
+class AvatarForm(forms.Form):
+    avatar = forms.ImageField(
+        label='Foto de perfil',
+        help_text='PNG, JPG ou WEBP, até 2 MB.',
+        widget=forms.ClearableFileInput(attrs={
+            'accept': 'image/png,image/jpeg,image/webp',
+        }),
+    )
+
+    def clean_avatar(self):
+        """
+        O ImageField do Django já abre o arquivo com o Pillow e recusa o que
+        não for imagem (ex.: um .exe renomeado para .png). Aqui somamos as
+        regras do site: tamanho, formato e dimensão.
+        """
+        upload = self.cleaned_data['avatar']
+
+        if upload.size > AVATAR_MAX_BYTES:
+            raise forms.ValidationError('A foto pode ter no máximo 2 MB.')
+
+        # O Django guarda a imagem aberta (só o cabeçalho) em upload.image
+        image = upload.image
+        if image.format not in AVATAR_FORMATS:
+            raise forms.ValidationError('Use uma imagem PNG, JPG ou WEBP.')
+
+        # "Bomba de imagem": arquivo pequeno que vira uma imagem gigantesca
+        # na memória ao abrir. Recusamos antes de carregar os pixels.
+        width, height = image.size
+        if width * height > AVATAR_MAX_PIXELS:
+            raise forms.ValidationError('Imagem grande demais (em pixels).')
+
+        return upload
+
+    def processed_avatar(self):
+        """
+        Gera a foto final: quadrada, 256x256, JPEG novo. Recriar o arquivo do
+        zero descarta tudo que não é a imagem em si, inclusive os metadados
+        EXIF, que em fotos de celular incluem a localização GPS de onde a foto
+        foi tirada.
+        """
+        upload = self.cleaned_data['avatar']
+        upload.seek(0)
+        with Image.open(upload) as image:
+            # Fotos de celular guardam a rotação no EXIF; aplica antes de
+            # descartar os metadados, senão a foto ficaria deitada.
+            image = ImageOps.exif_transpose(image)
+            image = image.convert('RGB')
+            # Corta no centro para ficar quadrada, sem distorcer o rosto.
+            image = ImageOps.fit(
+                image, (AVATAR_SIZE, AVATAR_SIZE), Image.Resampling.LANCZOS
+            )
+            output = BytesIO()
+            image.save(output, 'JPEG', quality=85, optimize=True)
+        return ContentFile(output.getvalue(), name='avatar.jpg')

@@ -58,7 +58,10 @@ def post_detail(request, slug):
             .exclude(pk=post.pk)[:3]
         )
 
-    comments = post.comments.filter(is_visible=True).select_related('author')
+    # author__profile já traz a foto de cada autor na mesma consulta.
+    comments = post.comments.filter(is_visible=True).select_related(
+        'author', 'author__profile'
+    )
 
     return render(request, 'blog/pages/post.html', {
         'post': post,

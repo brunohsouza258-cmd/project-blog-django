@@ -1326,6 +1326,56 @@ a.user-chip:hover {
   border-top: 1px solid var(--border);
 }
 
+/* Foto de perfil no lugar da inicial: recorta redondinho sem distorcer */
+img.user-avatar {
+  display: block;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.avatar-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.avatar-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+/* O input de arquivo nativo é feio e diferente em cada navegador: fica
+   escondido (mas acessível) e o botão "Escolher imagem" abre ele. */
+.avatar-picker input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.avatar-picker input[type="file"]:focus-visible + .btn {
+  outline: 3px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+.avatar-file-name {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar-buttons {
+  display: flex;
+  gap: 8px;
+}
+
 /* Botões de ação perigosa (excluir conta) */
 .btn-danger {
   color: #fff;
