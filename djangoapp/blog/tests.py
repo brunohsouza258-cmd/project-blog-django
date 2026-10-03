@@ -358,3 +358,16 @@ class TempoAtrasTests(TestCase):
         self.assertEqual(tempo_atras(now - timedelta(seconds=10)), 'agora')
         self.assertEqual(tempo_atras(now - timedelta(minutes=3, seconds=5)), 'há 3\xa0minutos')
         self.assertEqual(tempo_atras(now - timedelta(hours=2, minutes=5)), 'há 2\xa0horas')
+
+
+class FaviconTests(TestCase):
+    def test_default_icons_in_head(self):
+        response = self.client.get(reverse('blog:index'))
+        self.assertContains(response, 'blog/img/favicon.svg')
+        self.assertContains(response, 'blog/img/apple-touch-icon.png')
+        self.assertContains(response, '<meta name="theme-color" content="#7c3aed">')
+
+    def test_favicon_ico_redirects_to_static_file(self):
+        response = self.client.get('/favicon.ico')
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.url.endswith('blog/img/favicon.ico'))

@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
+from django.shortcuts import redirect
+from django.templatetags.static import static
 from django.views.static import serve
 
 from utils.rate_limit import rate_limit_post
@@ -25,7 +27,13 @@ from utils.rate_limit import rate_limit_post
 # aplicado "por fora": no máximo 5 tentativas a cada 15 minutos por IP.
 admin.site.login = rate_limit_post('admin-login', 5, 60 * 15)(admin.site.login)
 
+def favicon(request):
+    # Navegadores pedem /favicon.ico sozinhos, mesmo sem link no HTML.
+    return redirect(static('blog/img/favicon.ico'))
+
+
 urlpatterns = [
+    path('favicon.ico', favicon),
     path('', include('blog.urls')),
     path('conta/', include('accounts.urls')),
     path('feedback/', include('feedback.urls')),
