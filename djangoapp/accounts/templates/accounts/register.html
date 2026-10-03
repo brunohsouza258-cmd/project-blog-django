@@ -15,6 +15,12 @@
                     A senha precisa ter pelo menos 8 caracteres e não pode ser só números.
                 </p>
 
+                {# LGPD: avisa, antes do cadastro, como os dados serão usados #}
+                <p class="form-help">
+                    Ao criar a conta, você concorda com a
+                    <a href="{% url 'blog:privacy' %}" target="_blank" rel="noopener">Política de Privacidade</a>.
+                </p>
+
                 <button type="submit" class="btn btn-primary btn-block">
                     Criar minha conta <span class="btn-arrow">&rarr;</span>
                 </button>

@@ -1,0 +1,124 @@
+{% extends "blog/partials/base.html" %}
+
+{% block title %}Política de Privacidade | {{ site_setup.title|default:"Blog" }}{% endblock title %}
+
+{% block content %}
+    <article class="post-page container legal">
+        <header class="post-header">
+            <h1 class="post-page-title">Política de <span class="gradient-text">Privacidade</span></h1>
+            <p class="post-lead">
+                Como este blog usa os seus dados, em linguagem simples, conforme a
+                Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018).
+            </p>
+            <p class="post-meta">Atualizada em 2 de outubro de 2026</p>
+        </header>
+
+        <div class="post-content">
+            <h2>Quem cuida dos seus dados</h2>
+            <p>
+                Este blog é mantido por Bruno, responsável pelos dados coletados aqui.
+                Para qualquer dúvida ou pedido sobre seus dados, escreva para
+                <a href="mailto:Bruno.h.souza258@gmail.com">Bruno.h.souza258@gmail.com</a>.
+            </p>
+
+            <h2>Quais dados são coletados</h2>
+            <ul>
+                <li>
+                    <strong>Conta:</strong> nome, e-mail e senha. A senha nunca fica guardada
+                    como você digitou: o site guarda só uma versão criptografada (hash),
+                    que não permite descobrir a senha original. Também registramos a data do cadastro.
+                </li>
+                <li>
+                    <strong>Foto de perfil (opcional):</strong> a imagem que você enviar. Ela é
+                    recriada no servidor sem os metadados do arquivo, incluindo a localização
+                    GPS que fotos de celular costumam ter.
+                </li>
+                <li><strong>Comentários:</strong> o texto, quem escreveu e quando.</li>
+                <li>
+                    <strong>Feedback:</strong> nome, e-mail e mensagem enviados pelo formulário
+                    de feedback (não é preciso ter conta).
+                </li>
+                <li>
+                    <strong>Assistente com IA:</strong> suas perguntas são respondidas por uma IA
+                    que roda no próprio servidor do blog, sem serviços externos de IA. As
+                    conversas <strong>não são salvas no servidor</strong>; o histórico fica só no
+                    seu navegador e some quando você fecha a aba.
+                </li>
+                <li>
+                    <strong>Dados técnicos:</strong> o endereço IP de quem acessa é usado
+                    temporariamente para limitar tentativas repetidas (de login, cadastro,
+                    comentários etc.) e proteger o site contra abusos. Esses contadores
+                    expiram em até 1 hora e são apagados do banco de dados todos os dias.
+                </li>
+            </ul>
+
+            <h2>Cookies</h2>
+            <p>
+                O site usa apenas cookies <strong>essenciais</strong>: um para manter você
+                conectado à sua conta e outro de segurança, que impede que outros sites
+                enviem formulários em seu nome. Não usamos cookies de publicidade,
+                rastreamento ou estatísticas de terceiros.
+            </p>
+
+            <h2>Para que os dados são usados</h2>
+            <ul>
+                <li>Criar e manter a sua conta e permitir que você entre nela.</li>
+                <li>Mostrar seu primeiro nome e sua foto nos comentários que você publicar.
+                    Seu e-mail nunca aparece no site.</li>
+                <li>Enviar e-mails que você pediu, como o link de "esqueci minha senha".</li>
+                <li>Avisar o dono do blog sobre novos cadastros e responder feedbacks.</li>
+                <li>Proteger o site contra spam, robôs e tentativas de invasão.</li>
+            </ul>
+            <p>Seus dados não são vendidos nem usados para publicidade.</p>
+
+            <h2>Serviços de terceiros</h2>
+            <ul>
+                <li>
+                    <strong>Cloudflare:</strong> o acesso ao site passa pela rede da
+                    Cloudflare, que faz a conexão segura (HTTPS) até o servidor do blog.
+                </li>
+                <li>
+                    <strong>Google (Gmail):</strong> usado para enviar os e-mails do site
+                    (recuperação de senha, avisos de cadastro e feedbacks recebidos).
+                </li>
+            </ul>
+            <p>As fotos dos posts e as fontes do site ficam hospedadas no próprio servidor do blog.</p>
+
+            <h2>Por quanto tempo os dados ficam guardados</h2>
+            <ul>
+                <li><strong>Conta, foto e comentários:</strong> até você excluir a sua conta.
+                    Ao excluir, a foto e os comentários são apagados junto.</li>
+                <li><strong>Feedbacks:</strong> até serem apagados pelo dono do blog. Você pode
+                    pedir a exclusão pelo e-mail acima.</li>
+                <li><strong>Contadores de tentativas (IP):</strong> expiram em até 1 hora e são
+                    apagados diariamente.</li>
+                <li><strong>Cópias de segurança (backup) do banco de dados:</strong> são feitas
+                    diariamente para evitar perda de dados e guardadas por até 14 dias.</li>
+            </ul>
+
+            <h2>Seus direitos</h2>
+            <p>Pela LGPD, você pode, a qualquer momento:</p>
+            <ul>
+                <li><strong>Ver e corrigir</strong> seu nome, e-mail e foto em
+                    <a href="{% url 'accounts:profile' %}">Minha conta</a>.</li>
+                <li><strong>Excluir sua conta</strong> e os dados ligados a ela, também em
+                    Minha conta.</li>
+                <li>Pedir uma <strong>cópia</strong> dos seus dados, a <strong>exclusão</strong>
+                    de feedbacks ou tirar dúvidas pelo e-mail
+                    <a href="mailto:Bruno.h.souza258@gmail.com">Bruno.h.souza258@gmail.com</a>.</li>
+            </ul>
+
+            <h2>Segurança</h2>
+            <p>
+                O site usa conexão criptografada (HTTPS), senhas protegidas por hash, limites
+                contra tentativas repetidas e outras proteções técnicas. Nenhum sistema é 100%
+                invulnerável, mas trabalhamos para manter seus dados seguros.
+            </p>
+
+            <h2>Mudanças nesta política</h2>
+            <p>
+                Se esta política mudar, a data no topo da página será atualizada.
+            </p>
+        </div>
+    </article>
+{% endblock content %}

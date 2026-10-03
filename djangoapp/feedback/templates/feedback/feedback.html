@@ -17,6 +17,11 @@
                     <input type="text" name="website" id="id_website" tabindex="-1" autocomplete="off">
                 </div>
 
+                <p class="form-help">
+                    Seu nome e e-mail são usados só para responder a mensagem.
+                    Veja a <a href="{% url 'blog:privacy' %}" target="_blank" rel="noopener">Política de Privacidade</a>.
+                </p>
+
                 <button type="submit" class="btn btn-primary btn-block">
                     Enviar feedback <span class="btn-arrow">&rarr;</span>
                 </button>

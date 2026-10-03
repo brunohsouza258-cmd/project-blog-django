@@ -413,3 +413,16 @@ class SeoTests(TestCase):
         self.assertContains(page2, 'href="http://testserver/?page=2"')
         self.assertContains(self.client.get('/?q=post'), '<meta name="robots" content="noindex">')
         self.assertContains(self.client.get('/conta/entrar/'), '<meta name="robots" content="noindex">')
+
+
+class PrivacyPolicyTests(TestCase):
+    def test_page_and_links(self):
+        response = self.client.get(reverse('blog:privacy'))
+        self.assertContains(response, 'Política de')
+        self.assertContains(response, 'LGPD')
+        self.assertContains(response, 'Bruno.h.souza258@gmail.com')
+        privacy_url = reverse('blog:privacy')
+        # Link no rodapé de todas as páginas, no cadastro e no feedback
+        for url in ('/', reverse('accounts:register'), reverse('feedback:feedback')):
+            self.assertContains(self.client.get(url), f'href="{privacy_url}"', msg_prefix=url)
+        self.assertContains(self.client.get('/sitemap.xml'), privacy_url)
