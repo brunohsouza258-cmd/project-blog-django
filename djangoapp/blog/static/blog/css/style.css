@@ -1925,4 +1925,26 @@ img.user-avatar {
     background: rgba(253, 242, 248, 0.92);
     color: #be185d;
   }
+
+  /* Botões principais mostram o degradê inteiro (rosa -> laranja). No
+     computador ele tem o dobro da largura para "andar" no hover; no celular
+     não há hover, então mostramos tudo de uma vez. */
+  .btn-primary {
+    background-size: 100% auto;
+  }
+
+  /* Botão do chat menor no celular: cobre menos o conteúdo da página */
+  .chat-toggle {
+    width: 52px;
+    height: 52px;
+  }
+
+  .chat-toggle svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .chat-panel {
+    bottom: 66px;
+  }
 }
