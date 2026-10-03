@@ -12,9 +12,17 @@
 {# Feed RSS: navegadores e leitores de feed descobrem os posts novos por aqui #}
 <link rel="alternate" type="application/rss+xml" title="{{ site_setup.title|default:'Blog' }}" href="{% url 'blog:feed' %}">
 
+{# Ícone da aba do navegador: o do Setup (admin), se tiver; senão o padrão do blog #}
 {% if site_setup.favicon %}
-    <link rel="shortcut icon" href="{{ site_setup.favicon.url }}" type="image/png">
+    <link rel="icon" href="{{ site_setup.favicon.url }}" type="image/png">
+{% else %}
+    <link rel="icon" href="{% static 'blog/img/favicon.svg' %}" type="image/svg+xml">
+    <link rel="icon" href="{% static 'blog/img/favicon-32.png' %}" sizes="32x32" type="image/png">
 {% endif %}
+{# Ícone quando alguém adiciona o site à tela inicial do iPhone/Android #}
+<link rel="apple-touch-icon" href="{% static 'blog/img/apple-touch-icon.png' %}">
+{# Cor da barra do navegador no celular #}
+<meta name="theme-color" content="#7c3aed">
 
 {% if site_setup.description %}
     <meta name="description" content="{{ site_setup.description }}">
