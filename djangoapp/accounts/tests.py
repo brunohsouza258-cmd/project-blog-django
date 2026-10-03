@@ -256,3 +256,70 @@ class ProfileCrudTests(TestCase):
             'password1': 'senha-forte-123', 'password2': 'senha-forte-123',
         }, follow=True)
         self.assertContains(response, 'Conta criada! Bem-vindo, João.')
+
+
+class PasswordResetTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user(
+            'maria@email.com', 'maria@email.com', 'senha-antiga-123',
+            first_name='Maria',
+        )
+        self.url = reverse('accounts:password_reset')
+
+    def test_login_page_links_to_reset(self):
+        response = self.client.get(reverse('accounts:login'))
+        self.assertContains(response, reverse('accounts:password_reset'))
+
+    def test_link_expires_in_one_hour(self):
+        self.assertEqual(settings.PASSWORD_RESET_TIMEOUT, 3600)
+
+    def test_full_reset_flow(self):
+        import re
+        response = self.client.post(self.url, {'email': 'MARIA@email.com'})
+        self.assertRedirects(response, reverse('accounts:password_reset_done'))
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.to, ['maria@email.com'])
+        self.assertIn('vale por 1 hora', email.body)
+
+        link = re.search(r'https?://testserver(\S+)', email.body).group(1)
+        # O Django troca o token da URL por um marcador (não vaza em Referer)
+        response = self.client.get(link, follow=True)
+        self.assertContains(response, 'Crie uma')
+        response = self.client.post(response.redirect_chain[-1][0], {
+            'new_password1': 'senha-nova-456', 'new_password2': 'senha-nova-456',
+        })
+        self.assertRedirects(response, reverse('accounts:password_reset_complete'))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('senha-nova-456'))
+
+        # O mesmo link não funciona uma segunda vez
+        response = self.client.get(link, follow=True)
+        self.assertContains(response, 'Link inválido')
+
+    def test_email_is_signed_with_blog_name(self):
+        from site_setup.models import SiteSetup
+        SiteSetup.objects.create(title='Meu Blog', description='x')
+        self.client.post(self.url, {'email': 'maria@email.com'})
+        self.assertIn('Meu Blog', mail.outbox[0].subject)
+
+    def test_unknown_email_gets_same_page_and_no_email(self):
+        response = self.client.post(self.url, {'email': 'ninguem@email.com'})
+        # Mesma resposta: não dá para descobrir quem tem conta
+        self.assertRedirects(response, reverse('accounts:password_reset_done'))
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_tampered_link_is_rejected(self):
+        response = self.client.get(
+            reverse('accounts:password_reset_confirm', args=['MQ', 'token-falso']),
+            follow=True,
+        )
+        self.assertContains(response, 'Link inválido')
+
+    def test_reset_rate_limit(self):
+        for _ in range(5):
+            self.client.post(self.url, {'email': 'maria@email.com'})
+        response = self.client.post(self.url, {'email': 'maria@email.com'})
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(len(mail.outbox), 5)
