@@ -51,6 +51,21 @@
 
     {% include "chatbot/_widget.html" %}
 
+    {% comment %}
+        "Seja bem-vindo" no meio da tela logo depois de entrar ou criar conta.
+        Some sozinho pela animação do CSS (sem JavaScript) e não bloqueia
+        cliques na página (pointer-events: none).
+    {% endcomment %}
+    {% if show_welcome %}
+        <div class="welcome-overlay" role="status">
+            <div class="welcome-card">
+                {% include "accounts/_avatar.html" with url=user_avatar_url name=display_name size="lg" %}
+                <p class="welcome-text">Seja bem-vindo,</p>
+                <p class="welcome-name gradient-text">{{ display_name }}!</p>
+            </div>
+        </div>
+    {% endif %}
+
     {# Scripts extras de cada página (arquivos .js, nunca código inline: a CSP bloqueia) #}
     {% block scripts %}{% endblock scripts %}
 </body>

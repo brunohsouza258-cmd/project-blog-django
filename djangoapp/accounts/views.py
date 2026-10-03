@@ -11,7 +11,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods, require_POST
 
-from accounts.context_processors import display_name
+from accounts.context_processors import WELCOME_SESSION_KEY
 from accounts.forms import (
     AvatarForm, DeleteAccountForm, EmailAuthenticationForm,
     EmailPasswordResetForm, ProfileForm, RegisterForm,
@@ -53,8 +53,8 @@ def register(request):
             fail_silently=True,
         )
 
-        first_name = display_name(request)['display_name']
-        messages.success(request, f'Conta criada! Bem-vindo, {first_name}.')
+        # Mostra o "Seja bem-vindo" no meio da tela na próxima página.
+        request.session[WELCOME_SESSION_KEY] = True
         return redirect('blog:index')
 
     return render(request, 'accounts/register.html', {'form': form})
@@ -78,8 +78,11 @@ class EmailLoginView(LoginView):
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
-        messages.success(self.request, 'Você entrou na sua conta.')
-        return super().form_valid(form)
+        # super() faz o login (e troca a sessão por segurança); só depois
+        # marcamos o "Seja bem-vindo", senão a marca se perderia na troca.
+        response = super().form_valid(form)
+        self.request.session[WELCOME_SESSION_KEY] = True
+        return response
 
 
 class AccountLogoutView(LogoutView):

@@ -258,7 +258,8 @@ class ProfileCrudTests(TestCase):
             'first_name': 'João Pedro Silva', 'email': 'joao@email.com',
             'password1': 'senha-forte-123', 'password2': 'senha-forte-123',
         }, follow=True)
-        self.assertContains(response, 'Conta criada! Bem-vindo, João.')
+        self.assertContains(response, 'class="welcome-overlay"')
+        self.assertContains(response, '<p class="welcome-name gradient-text">João!</p>')
 
 
 class PasswordResetTests(TestCase):
@@ -462,3 +463,41 @@ class AvatarTests(TestCase):
             self.upload(image_file())
         response = self.upload(image_file())
         self.assertContains(response, 'Muitas tentativas')
+
+
+class WelcomeTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        User.objects.create_user(
+            'maria@email.com', 'maria@email.com', 'senha-forte-123',
+            first_name='Maria Clara',
+        )
+
+    def login(self):
+        return self.client.post(reverse('accounts:login'), {
+            'username': 'maria@email.com', 'password': 'senha-forte-123',
+        }, follow=True)
+
+    def test_welcome_appears_once_after_login(self):
+        response = self.login()
+        self.assertContains(response, 'class="welcome-overlay"')
+        self.assertContains(response, '<p class="welcome-name gradient-text">Maria!</p>')
+        # Na página seguinte não aparece de novo
+        response = self.client.get(reverse('blog:index'))
+        self.assertNotContains(response, 'class="welcome-overlay"')
+
+    def test_home_title_uses_first_name_while_logged_in(self):
+        self.login()
+        response = self.client.get(reverse('blog:index'))
+        self.assertContains(response, 'Seja bem-vindo, <span class="gradient-text">Maria</span>')
+
+    def test_visitor_sees_default_title_and_no_welcome(self):
+        response = self.client.get(reverse('blog:index'))
+        self.assertNotContains(response, 'class="welcome-overlay"')
+        self.assertContains(response, 'Bem-vindo ao')
+
+    def test_wrong_password_does_not_show_welcome(self):
+        response = self.client.post(reverse('accounts:login'), {
+            'username': 'maria@email.com', 'password': 'errada',
+        })
+        self.assertNotContains(response, 'class="welcome-overlay"')
