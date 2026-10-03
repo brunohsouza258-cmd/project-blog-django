@@ -1,3 +1,8 @@
+# Marca colocada na sessão logo depois do login/cadastro: a próxima página
+# mostra o "Seja bem-vindo" no meio da tela, uma única vez.
+WELCOME_SESSION_KEY = 'show_welcome'
+
+
 def display_name(request):
     """
     Primeiro nome de quem está logado, para o header e as saudações.
@@ -15,4 +20,9 @@ def display_name(request):
     profile = getattr(user, 'profile', None)
     avatar_url = profile.avatar_url if profile else ''
 
-    return {'display_name': name, 'user_avatar_url': avatar_url}
+    return {
+        'display_name': name,
+        'user_avatar_url': avatar_url,
+        # pop() lê e já apaga a marca: o aviso aparece só uma vez.
+        'show_welcome': request.session.pop(WELCOME_SESSION_KEY, False),
+    }

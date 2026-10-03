@@ -1662,6 +1662,79 @@ img.user-avatar {
 }
 
 /* ==========================================================================
+   "Seja bem-vindo" no meio da tela (depois de entrar ou criar conta)
+   ========================================================================== */
+
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  /* Nunca bloqueia cliques: a pessoa já pode usar a página por baixo */
+  pointer-events: none;
+  background: rgba(13, 11, 26, 0.35);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  /* Aparece, fica ~3s e some; "forwards" mantém escondido no fim */
+  animation: welcome-fade 3.8s ease forwards;
+}
+
+.welcome-card {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: min(100%, 360px);
+  padding: 32px 28px;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: var(--surface);
+  box-shadow: 0 30px 80px -20px rgba(124, 58, 237, 0.55);
+  text-align: center;
+  animation: welcome-pop 3.8s var(--ease) forwards;
+}
+
+.welcome-card .user-avatar {
+  margin-bottom: 10px;
+}
+
+.welcome-text {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+}
+
+.welcome-name {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 8vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+@keyframes welcome-fade {
+  0% { opacity: 0; }
+  10%, 80% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes welcome-pop {
+  0% { transform: scale(0.7) translateY(20px); }
+  14% { transform: scale(1.04); }
+  22%, 80% { transform: scale(1); }
+  100% { transform: scale(0.96); }
+}
+
+/* Quem pediu "reduzir movimento" no sistema: sem pulo, só aparece e some.
+   Precisa vencer a regra geral que desliga todas as animações, senão o
+   aviso ficaria parado no meio da tela para sempre. */
+@media (prefers-reduced-motion: reduce) {
+  .welcome-overlay {
+    animation: welcome-fade 3.8s linear forwards !important;
+  }
+}
+
+/* ==========================================================================
    Animações
    ========================================================================== */
 
