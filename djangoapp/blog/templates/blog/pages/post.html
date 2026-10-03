@@ -1,4 +1,5 @@
 {% extends "blog/partials/base.html" %}
+{% load blog_extras %}
 
 {% block title %}{{ post.title }} | {{ site_setup.title|default:"Blog" }}{% endblock title %}
 
@@ -40,6 +41,54 @@
             {{ post.content|linebreaks }}
         </div>
     </article>
+
+    <section id="comentarios" class="comments container">
+        <h2 class="section-title">
+            Comentários{% if comments %} <span class="comments-count">{{ comments|length }}</span>{% endif %}
+        </h2>
+
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'blog:comment_create' post.slug %}" class="comment-form">
+                {% csrf_token %}
+                <span class="user-avatar" aria-hidden="true">{{ display_name|first|upper }}</span>
+                <div class="comment-form-body">
+                    <label for="{{ comment_form.text.id_for_label }}" class="sr-only">{{ comment_form.text.label }}</label>
+                    {{ comment_form.text }}
+                    <button type="submit" class="btn btn-primary btn-sm">Comentar</button>
+                </div>
+            </form>
+        {% else %}
+            <p class="comments-login">
+                <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}%23comentarios">Entre</a> ou
+                <a href="{% url 'accounts:register' %}">crie uma conta</a> para comentar.
+            </p>
+        {% endif %}
+
+        <ol class="comment-list">
+            {% for comment in comments %}
+                <li class="comment">
+                    <span class="user-avatar" aria-hidden="true">{{ comment.author.first_name|default:comment.author.email|first|upper }}</span>
+                    <div class="comment-body">
+                        <div class="comment-meta">
+                            {# Só o primeiro nome: o e-mail de quem comenta nunca aparece #}
+                            <strong>{{ comment.author.first_name.split.0|default:"Leitor" }}</strong>
+                            <time datetime="{{ comment.created_at|date:'c' }}" title="{{ comment.created_at|date:'d/m/Y H:i' }}">{{ comment.created_at|tempo_atras }}</time>
+                        </div>
+                        {# linebreaksbr mantém as quebras de linha; o texto continua escapado (sem HTML) #}
+                        <p class="comment-text">{{ comment.text|linebreaksbr }}</p>
+                        {% if user == comment.author or user.is_staff %}
+                            <form method="post" action="{% url 'blog:comment_delete' comment.pk %}" class="comment-delete">
+                                {% csrf_token %}
+                                <button type="submit" class="link-button">Apagar</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </li>
+            {% empty %}
+                <li class="comments-empty">Ninguém comentou ainda. Seja o primeiro!</li>
+            {% endfor %}
+        </ol>
+    </section>
 
     {% if related %}
         <section class="container">

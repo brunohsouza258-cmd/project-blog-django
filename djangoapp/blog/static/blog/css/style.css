@@ -714,6 +714,151 @@ a {
 }
 
 /* ==========================================================================
+   Comentários
+   ========================================================================== */
+
+/* Texto só para leitores de tela (acessibilidade), invisível na tela */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.comments {
+  max-width: 760px;
+  padding-bottom: 56px;
+}
+
+.comments-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--gradient);
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.comment-form,
+.comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.comment-form {
+  margin-bottom: 28px;
+}
+
+.comment-form-body {
+  display: grid;
+  flex: 1;
+  gap: 10px;
+  justify-items: end;
+}
+
+.comment-form textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.comment-form textarea:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+}
+
+.comments-login {
+  margin-bottom: 28px;
+  padding: 16px 18px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+
+.comments-login a {
+  font-weight: 600;
+  color: var(--violet);
+}
+
+.comment-list {
+  display: grid;
+  gap: 14px;
+  list-style: none;
+}
+
+.comment-body {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 4px var(--radius) var(--radius) var(--radius);
+  background: var(--surface);
+  animation: fade-up 0.4s var(--ease) both;
+}
+
+.comment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.comment-meta time {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.comment-text {
+  overflow-wrap: anywhere;
+}
+
+.comment-delete {
+  margin-top: 6px;
+}
+
+/* Botão com cara de link (apagar comentário) */
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: #dc2626;
+}
+
+.comments-empty {
+  padding: 18px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.auth-switch-tight {
+  margin-top: 8px;
+}
+
+/* ==========================================================================
    Paginação
    ========================================================================== */
 

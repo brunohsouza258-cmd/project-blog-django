@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from blog.models import Category, Post
+from blog.models import Category, Comment, Post
 from blog.search import search_posts
 
 
@@ -229,3 +229,116 @@ class HeaderAndCoverTests(TestCase):
         self.assertContains(
             response, 'href="https://commons.wikimedia.org/wiki/File:Teste.jpg"'
         )
+
+
+class CommentTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.post = make_post('Post comentável')
+        self.maria = User.objects.create_user(
+            'maria@email.com', 'maria@email.com', 'x', first_name='Maria Clara'
+        )
+        self.joao = User.objects.create_user(
+            'joao@email.com', 'joao@email.com', 'x', first_name='João'
+        )
+        self.url = reverse('blog:comment_create', args=[self.post.slug])
+
+    def comment(self, text='Muito bom!', user=None):
+        self.client.force_login(user or self.maria)
+        return self.client.post(self.url, {'text': text})
+
+    def test_visitor_cannot_comment(self):
+        response = self.client.post(self.url, {'text': 'oi'})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('accounts:login'), response.url)
+        self.assertFalse(Comment.objects.exists())
+
+    def test_visitor_sees_invitation_to_login(self):
+        response = self.client.get(self.post.get_absolute_url())
+        self.assertContains(response, 'para comentar')
+
+    def test_comment_is_published_with_first_name_only(self):
+        response = self.comment()
+        self.assertRedirects(
+            response, f'{self.post.get_absolute_url()}#comentarios',
+            fetch_redirect_response=False,
+        )
+        page = self.client.get(self.post.get_absolute_url())
+        self.assertContains(page, 'Muito bom!')
+        self.assertContains(page, '<strong>Maria</strong>')
+        # O e-mail de quem comenta nunca aparece na página
+        self.client.logout()
+        page = self.client.get(self.post.get_absolute_url())
+        self.assertNotContains(page, 'maria@email.com')
+
+    def test_empty_and_too_long_comments_are_rejected(self):
+        self.comment('   ')
+        self.comment('a' * 1001)
+        self.assertFalse(Comment.objects.exists())
+
+    def test_comment_html_is_escaped(self):
+        self.comment('<script>alert(1)</script>')
+        page = self.client.get(self.post.get_absolute_url())
+        self.assertNotContains(page, '<script>alert(1)</script>')
+        self.assertContains(page, '&lt;script&gt;')
+
+    def test_cannot_comment_on_draft(self):
+        draft = make_post('Rascunho', is_published=False)
+        self.client.force_login(self.maria)
+        response = self.client.post(
+            reverse('blog:comment_create', args=[draft.slug]), {'text': 'oi'}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_is_not_allowed(self):
+        self.client.force_login(self.maria)
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_delete_own_comment_only(self):
+        self.comment()
+        comment = Comment.objects.get()
+        delete_url = reverse('blog:comment_delete', args=[comment.pk])
+
+        self.client.force_login(self.joao)
+        self.client.post(delete_url)
+        self.assertTrue(Comment.objects.exists())
+
+        self.client.force_login(self.maria)
+        self.client.post(delete_url)
+        self.assertFalse(Comment.objects.exists())
+
+    def test_admin_can_delete_any_comment(self):
+        self.comment()
+        admin = User.objects.create_user('adm', password='x', is_staff=True)
+        self.client.force_login(admin)
+        self.client.post(reverse('blog:comment_delete', args=[Comment.objects.get().pk]))
+        self.assertFalse(Comment.objects.exists())
+
+    def test_hidden_comment_is_not_shown(self):
+        self.comment('Comentário escondido')
+        Comment.objects.update(is_visible=False)
+        page = self.client.get(self.post.get_absolute_url())
+        self.assertNotContains(page, 'Comentário escondido')
+
+    def test_comment_rate_limit(self):
+        for i in range(10):
+            self.comment(f'comentário {i}')
+        self.comment('um a mais')
+        self.assertEqual(Comment.objects.count(), 10)
+
+    def test_comments_are_deleted_with_account(self):
+        self.comment()
+        self.maria.delete()
+        self.assertFalse(Comment.objects.exists())
+
+
+class TempoAtrasTests(TestCase):
+    def test_tempo_atras(self):
+        from datetime import timedelta
+
+        from blog.templatetags.blog_extras import tempo_atras
+        now = timezone.now()
+        self.assertEqual(tempo_atras(now - timedelta(seconds=10)), 'agora')
+        self.assertEqual(tempo_atras(now - timedelta(minutes=3, seconds=5)), 'há 3\xa0minutos')
+        self.assertEqual(tempo_atras(now - timedelta(hours=2, minutes=5)), 'há 2\xa0horas')
