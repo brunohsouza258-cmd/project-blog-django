@@ -137,3 +137,27 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Comment(models.Model):
+    class Meta:
+        verbose_name = 'Comentário'
+        verbose_name_plural = 'Comentários'
+        ordering = 'created_at',
+
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, related_name='comments',
+        verbose_name='Post',
+    )
+    # Se a pessoa excluir a conta, os comentários dela somem junto.
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='comments', verbose_name='Autor',
+    )
+    text = models.TextField('Comentário', max_length=1000)
+    # Moderação: desmarque no admin para esconder um comentário do site.
+    is_visible = models.BooleanField('Visível', default=True)
+    created_at = models.DateTimeField('Enviado em', auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.author} em "{self.post}"'

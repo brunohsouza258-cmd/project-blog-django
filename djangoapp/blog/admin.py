@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from blog.models import Category, Post
+from blog.models import Category, Comment, Post
 
 
 @admin.register(Category)
@@ -36,3 +36,26 @@ class PostAdmin(admin.ModelAdmin):
         if not change:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = 'author', 'post', 'short_text', 'created_at', 'is_visible',
+    list_editable = 'is_visible',
+    list_filter = 'is_visible', 'created_at',
+    search_fields = 'text', 'author__first_name', 'author__email', 'post__title',
+    list_select_related = 'author', 'post',
+    readonly_fields = 'post', 'author', 'text', 'created_at',
+    actions = 'hide', 'show',
+
+    @admin.display(description='Comentário')
+    def short_text(self, obj):
+        return obj.text[:80]
+
+    @admin.action(description='Esconder comentários selecionados')
+    def hide(self, request, queryset):
+        queryset.update(is_visible=False)
+
+    @admin.action(description='Mostrar comentários selecionados')
+    def show(self, request, queryset):
+        queryset.update(is_visible=True)

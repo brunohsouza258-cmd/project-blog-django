@@ -8,6 +8,8 @@ app_name = 'blog'
 urlpatterns = [
     path('', views.index, name='index'),
     path('post/<slug:slug>/', views.post_detail, name='post'),
+    path('post/<slug:slug>/comentar/', views.comment_create, name='comment_create'),
+    path('comentario/<int:pk>/apagar/', views.comment_delete, name='comment_delete'),
     path('categoria/<slug:slug>/', views.category, name='category'),
     path('feed/', LatestPostsFeed(), name='feed'),
 ]
