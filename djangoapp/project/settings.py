@@ -246,8 +246,9 @@ SECURE_REFERRER_POLICY = 'same-origin'
 _csp = {
     'default-src': [CSP.SELF],
     'script-src': [CSP.SELF],
-    'style-src': [CSP.SELF, 'https://fonts.googleapis.com'],
-    'font-src': [CSP.SELF, 'https://fonts.gstatic.com'],
+    # Fontes e estilos só do próprio site (nada de Google Fonts)
+    'style-src': [CSP.SELF],
+    'font-src': [CSP.SELF],
     # blob: = prévia local da foto de perfil antes de enviar (avatar.js)
     'img-src': [CSP.SELF, 'data:', 'blob:'],
     'connect-src': [CSP.SELF],

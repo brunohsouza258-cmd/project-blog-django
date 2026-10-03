@@ -371,3 +371,14 @@ class FaviconTests(TestCase):
         response = self.client.get('/favicon.ico')
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.url.endswith('blog/img/favicon.ico'))
+
+
+class SelfHostedFontsTests(TestCase):
+    def test_no_google_fonts_and_local_fonts_preloaded(self):
+        response = self.client.get(reverse('blog:index'))
+        self.assertNotContains(response, 'fonts.googleapis.com')
+        self.assertNotContains(response, 'fonts.gstatic.com')
+        self.assertContains(response, 'blog/fonts/inter-400.woff2')
+        csp = response['Content-Security-Policy-Report-Only']
+        self.assertIn("font-src 'self'", csp)
+        self.assertNotIn('google', csp)
