@@ -70,3 +70,30 @@ class AdminAndMediaSecurityTests(TestCase):
             response = self.client.get(path)
             self.assertIn(response.status_code, (400, 404), path)
             self.assertNotIn(b'root:', response.content)
+
+
+class PhoneTests(TestCase):
+    def test_phone_validator(self):
+        from utils.validators import validate_phone
+        for ok in ('(11) 91234-5678', '11912345678', '+55 11 91234-5678'):
+            validate_phone(ok)
+        for bad in ('abc', '123', 'javascript:alert(1)', '(11) 9563-69<b>'):
+            with self.assertRaises(ValidationError):
+                validate_phone(bad)
+
+    def test_phone_in_footer_with_whatsapp_link_and_in_ai(self):
+        from django.test import RequestFactory
+
+        from chatbot.context import build_system_prompt
+        from site_setup.models import SiteSetup
+        SiteSetup.objects.create(
+            title='Blog', description='x', contact_phone='(11) 91234-5678'
+        )
+        response = self.client.get('/')
+        self.assertContains(response, 'href="https://wa.me/5511912345678"')
+        self.assertContains(response, '(11) 91234-5678')
+        prompt = build_system_prompt(RequestFactory().get('/'), '')
+        self.assertIn('(11) 91234-5678', prompt)
+
+    def test_no_phone_no_whatsapp(self):
+        self.assertNotContains(self.client.get('/'), 'wa.me')

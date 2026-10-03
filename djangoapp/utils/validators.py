@@ -16,3 +16,11 @@ def validate_safe_url(value):
         raise ValidationError(
             'Use um link começando com http://, https://, mailto:, / ou #.'
         )
+
+
+def validate_phone(value):
+    # Só números e a pontuação comum de telefone: nada de letras ou links.
+    allowed = set('0123456789 ()-+')
+    digits = [c for c in value if c.isdigit()]
+    if set(value) - allowed or not 10 <= len(digits) <= 13:
+        raise ValidationError('Use um telefone como (11) 91234-5678.')
