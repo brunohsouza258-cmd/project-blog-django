@@ -48,7 +48,7 @@ class SiteSetup(models.Model):
     contact_phone = models.CharField(
         'Telefone / WhatsApp', max_length=20, blank=True,
         validators=[validate_phone],
-        help_text='Ex.: (11) 95639-6972. Aparece no rodapé com link para o '
+        help_text='Ex.: (11) 91234-5678. Aparece no rodapé com link para o '
                   'WhatsApp. Deixe em branco para não mostrar.',
     )
 

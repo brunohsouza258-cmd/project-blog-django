@@ -75,7 +75,7 @@ class AdminAndMediaSecurityTests(TestCase):
 class PhoneTests(TestCase):
     def test_phone_validator(self):
         from utils.validators import validate_phone
-        for ok in ('(11) 95639-6972', '11956396972', '+55 11 95639-6972'):
+        for ok in ('(11) 91234-5678', '11912345678', '+55 11 91234-5678'):
             validate_phone(ok)
         for bad in ('abc', '123', 'javascript:alert(1)', '(11) 9563-69<b>'):
             with self.assertRaises(ValidationError):
@@ -87,13 +87,13 @@ class PhoneTests(TestCase):
         from chatbot.context import build_system_prompt
         from site_setup.models import SiteSetup
         SiteSetup.objects.create(
-            title='Blog', description='x', contact_phone='(11) 95639-6972'
+            title='Blog', description='x', contact_phone='(11) 91234-5678'
         )
         response = self.client.get('/')
-        self.assertContains(response, 'href="https://wa.me/5511956396972"')
-        self.assertContains(response, '(11) 95639-6972')
+        self.assertContains(response, 'href="https://wa.me/5511912345678"')
+        self.assertContains(response, '(11) 91234-5678')
         prompt = build_system_prompt(RequestFactory().get('/'), '')
-        self.assertIn('(11) 95639-6972', prompt)
+        self.assertIn('(11) 91234-5678', prompt)
 
     def test_no_phone_no_whatsapp(self):
         self.assertNotContains(self.client.get('/'), 'wa.me')

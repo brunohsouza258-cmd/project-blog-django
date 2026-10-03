@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='sitesetup',
             name='contact_phone',
-            field=models.CharField(blank=True, help_text='Ex.: (11) 95639-6972. Aparece no rodapé com link para o WhatsApp. Deixe em branco para não mostrar.', max_length=20, validators=[utils.validators.validate_phone], verbose_name='Telefone / WhatsApp'),
+            field=models.CharField(blank=True, help_text='Ex.: (11) 91234-5678. Aparece no rodapé com link para o WhatsApp. Deixe em branco para não mostrar.', max_length=20, validators=[utils.validators.validate_phone], verbose_name='Telefone / WhatsApp'),
         ),
     ]

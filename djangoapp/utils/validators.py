@@ -23,4 +23,4 @@ def validate_phone(value):
     allowed = set('0123456789 ()-+')
     digits = [c for c in value if c.isdigit()]
     if set(value) - allowed or not 10 <= len(digits) <= 13:
-        raise ValidationError('Use um telefone como (11) 95639-6972.')
+        raise ValidationError('Use um telefone como (11) 91234-5678.')
