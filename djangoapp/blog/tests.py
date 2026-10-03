@@ -333,6 +333,22 @@ class CommentTests(TestCase):
         self.assertFalse(Comment.objects.exists())
 
 
+class OpenGraphTests(TestCase):
+    def test_post_page_has_preview_tags_with_absolute_image(self):
+        post = make_post('Com prévia', cover='posts/capa.jpg')
+        response = self.client.get(post.get_absolute_url())
+        self.assertContains(response, '<meta property="og:title" content="Com prévia">')
+        self.assertContains(
+            response, '<meta property="og:description" content="Resumo de Com prévia">'
+        )
+        self.assertContains(response, 'content="http://testserver/media/posts/capa.jpg"')
+        self.assertContains(response, '<meta property="og:type" content="article">')
+
+    def test_home_has_site_preview(self):
+        response = self.client.get(reverse('blog:index'))
+        self.assertContains(response, '<meta property="og:type" content="website">')
+
+
 class TempoAtrasTests(TestCase):
     def test_tempo_atras(self):
         from datetime import timedelta

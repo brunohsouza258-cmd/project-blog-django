@@ -124,7 +124,7 @@ class Post(models.Model):
         super().save(*args, **kwargs)
 
         if self.cover and current_cover_name != self.cover.name:
-            resize_image(self.cover, 1200, quality=80)
+            resize_image(self.cover, 1200, quality=78, max_height=1200)
 
     @property
     def reading_time(self):
