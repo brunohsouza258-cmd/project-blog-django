@@ -97,6 +97,8 @@ def build_system_prompt(request, question=''):
         f'Descrição do blog: {description}' if description else '',
         'Autor e dono do blog: Bruno.',
         f'E-mail de contato do Bruno: {settings.SIGNUP_NOTIFY_EMAIL}',
+        f'Telefone/WhatsApp do Bruno: {setup.contact_phone}'
+        if setup and setup.contact_phone else '',
         'Qualquer pessoa pode criar uma conta gratuita com nome, e-mail e '
         'senha. A senha precisa ter pelo menos 8 caracteres.',
         'Para sugestões, elogios ou problemas, o visitante pode usar a '

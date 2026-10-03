@@ -9,6 +9,14 @@
                 Contato:
                 <a href="mailto:Bruno.h.souza258@gmail.com" class="footer-email">Bruno.h.souza258@gmail.com</a>
             </p>
+            {# Telefone vem do Setup no admin (não fica no código, que é público no GitHub) #}
+            {% if site_setup.contact_phone %}
+                <p>
+                    WhatsApp:
+                    <a href="https://wa.me/{{ site_setup.whatsapp_number }}" class="footer-email"
+                       target="_blank" rel="noopener noreferrer">{{ site_setup.contact_phone }}</a>
+                </p>
+            {% endif %}
         </div>
 
         {% if site_setup.menulink_set.exists %}
