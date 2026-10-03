@@ -11,7 +11,12 @@ Blog pessoal feito com **Django** e **Docker**, com sistema de contas, página d
 - **Feed RSS** em `/feed/` para os leitores acompanharem os posts novos.
 - **Página inicial** com layout moderno, tema claro/escuro automático e versão para celular.
 - **Configuração pelo admin**: título, descrição, favicon, links do menu e quais partes do site aparecem (header, busca, menu, rodapé...) são editados no painel, sem mexer no código.
-- **Contas de usuário**: o visitante cria uma conta com nome, e-mail e senha, e entra com o e-mail. O dono do blog recebe um aviso por e-mail a cada novo cadastro.
+- **Contas de usuário**: o visitante cria uma conta com nome, e-mail e senha, e entra com o e-mail. O dono do blog recebe um aviso por e-mail a cada novo cadastro. O site mostra só o primeiro nome de cada pessoa.
+- **Minha conta**: a pessoa vê e edita nome e e-mail, troca a senha, envia uma **foto de perfil** (PNG, JPG ou WEBP) e pode excluir a própria conta.
+- **Esqueci minha senha**: link por e-mail para criar uma senha nova, válido por 1 hora e de uso único.
+- **Comentários** nos posts para quem tem conta, com moderação pelo admin.
+- **Prévia ao compartilhar**: links de posts enviados no WhatsApp e redes sociais mostram foto, título e resumo.
+- **Contato**: e-mail e WhatsApp no rodapé; o telefone é configurado no admin (Setup), fora do código.
 - **Feedback**: formulário para elogios, sugestões e problemas. As mensagens ficam salvas no admin (com marcação de "lido") e também são enviadas por e-mail.
 - **Assistente com IA local**: um chat flutuante, em todas as páginas, que responde **somente** sobre o blog (posts, autor, contato, como criar conta, etc.). A cada pergunta ele consulta os posts publicados mais recentes e os mais relacionados ao assunto, então conhece um post novo assim que ele é publicado, e responde com links clicáveis para os posts. A IA roda no próprio computador com [Ollama](https://ollama.com), sem enviar as conversas para serviços externos.
 
@@ -22,7 +27,9 @@ Blog pessoal feito com **Django** e **Docker**, com sistema de contas, página d
 - Armadilha invisível (honeypot) contra robôs de spam no feedback.
 - Content Security Policy, cookies `HttpOnly`/`Secure` e HTTPS obrigatório em produção.
 - Validação contra injeção em cabeçalhos de e-mail e contra links `javascript:` no menu.
-- Conteúdo dos posts e respostas da IA sempre exibidos como texto (sem HTML); no chat, só links do próprio blog ficam clicáveis.
+- Conteúdo dos posts, comentários e respostas da IA sempre exibidos como texto (sem HTML); no chat, só links do próprio blog ficam clicáveis.
+- Fotos de perfil: o servidor confere se o arquivo é mesmo uma imagem, limita tamanho e dimensões (contra "bombas de imagem"), recria a foto sem metadados (remove a localização GPS de fotos de celular) e usa nomes aleatórios. A foto é apagada junto com a conta.
+- "Esqueci minha senha" não revela se um e-mail tem conta e tem limite de pedidos por hora.
 - Banco de dados e IA acessíveis apenas dentro do Docker.
 
 ## Tecnologias
@@ -67,13 +74,13 @@ Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/
 
 ### Posts de exemplo
 
-Para preencher o blog com 15 posts sobre personalidades famosas (esporte, música, cinema, ciência e literatura), rode:
+Para preencher o blog com 27 posts sobre personalidades famosas (esporte, música, cinema, ciência, arte e literatura), rode:
 
 ```bash
 docker compose exec djangoapp python manage.py seed_posts
 ```
 
-12 posts são publicados com datas das últimas semanas e 3 ficam agendados para os próximos dias, aparecendo sozinhos no site. O comando também baixa as fotos de capa do [Wikimedia Commons](https://commons.wikimedia.org) (só imagens em domínio público ou Creative Commons, com o crédito do autor exibido no post). Pode ser executado mais de uma vez sem duplicar posts; se alguma foto falhar, rode de novo para baixar só as que faltaram (ou use `--sem-imagens` para pular as fotos). O conteúdo fica em `djangoapp/blog/data/famosos.json`.
+24 posts são publicados com datas das últimas semanas e 3 ficam agendados para os próximos dias, aparecendo sozinhos no site. O comando também baixa as fotos de capa do [Wikimedia Commons](https://commons.wikimedia.org) (só imagens em domínio público ou Creative Commons, com o crédito do autor exibido no post). Pode ser executado mais de uma vez sem duplicar posts; se alguma foto falhar, rode de novo para baixar só as que faltaram (ou use `--sem-imagens` para pular as fotos). O conteúdo fica em `djangoapp/blog/data/famosos.json`.
 
 ### Publicando um post
 
