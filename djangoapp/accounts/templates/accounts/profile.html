@@ -6,12 +6,29 @@
     <section class="auth container">
         <div class="auth-card auth-card-wide">
             <div class="profile-head">
-                <span class="user-avatar user-avatar-lg" aria-hidden="true">{{ display_name|first|upper }}</span>
+                {% include "accounts/_avatar.html" with url=user_avatar_url name=display_name size="lg" %}
                 <div>
                     <h1 class="auth-title">Olá, <span class="gradient-text">{{ display_name }}</span></h1>
                     <p class="auth-subtitle">Membro desde {{ user.date_joined|date:"d/m/Y" }}</p>
                 </div>
             </div>
+
+            <h2 class="profile-section-title">Foto de perfil</h2>
+            {# enctype multipart: obrigatório para enviar arquivos num formulário #}
+            <form method="post" action="{% url 'accounts:avatar' %}" enctype="multipart/form-data" class="avatar-form">
+                {% csrf_token %}
+                <label class="avatar-picker">
+                    <input type="file" name="avatar" accept="image/png,image/jpeg,image/webp" required>
+                    <span class="btn btn-ghost btn-sm">Escolher imagem</span>
+                    <span class="avatar-file-name form-help">PNG, JPG ou WEBP, até 2 MB</span>
+                </label>
+                <div class="avatar-buttons">
+                    <button type="submit" class="btn btn-primary btn-sm">Salvar foto</button>
+                    {% if user_avatar_url %}
+                        <button type="submit" name="remove" value="1" class="btn btn-danger-ghost btn-sm" formnovalidate>Remover foto</button>
+                    {% endif %}
+                </div>
+            </form>
 
             <h2 class="profile-section-title">Seus dados</h2>
             <form method="post" class="auth-form" novalidate>
@@ -31,3 +48,8 @@
         </div>
     </section>
 {% endblock content %}
+
+{% block scripts %}
+    {% load static %}
+    <script src="{% static 'accounts/js/avatar.js' %}" defer></script>
+{% endblock scripts %}

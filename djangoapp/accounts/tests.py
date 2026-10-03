@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core import mail
@@ -323,3 +326,139 @@ class PasswordResetTests(TestCase):
         response = self.client.post(self.url, {'email': 'maria@email.com'})
         self.assertEqual(response.status_code, 429)
         self.assertEqual(len(mail.outbox), 5)
+
+
+def image_file(name='foto.png', size=(600, 400), fmt='PNG', exif=None, noise=False):
+    from io import BytesIO
+
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from PIL import Image
+
+    if noise:
+        image = Image.frombytes('RGB', size, os.urandom(size[0] * size[1] * 3))
+    else:
+        image = Image.new('RGB', size, (200, 30, 90))
+    buffer = BytesIO()
+    kwargs = {'exif': exif} if exif is not None else {}
+    image.save(buffer, fmt, **kwargs)
+    return SimpleUploadedFile(name, buffer.getvalue())
+
+
+class AvatarTests(TestCase):
+    def setUp(self):
+        import tempfile
+
+        from django.test import override_settings
+        cache.clear()
+        self.media = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=Path(self.media))
+        self.override.enable()
+        self.user = User.objects.create_user(
+            'maria@email.com', 'maria@email.com', 'x', first_name='Maria'
+        )
+        self.client.force_login(self.user)
+        self.url = reverse('accounts:avatar')
+
+    def tearDown(self):
+        import shutil
+        self.override.disable()
+        shutil.rmtree(self.media, ignore_errors=True)
+
+    def upload(self, file):
+        return self.client.post(self.url, {'avatar': file}, follow=True)
+
+    def avatar(self):
+        from accounts.models import Profile
+        profile = Profile.objects.filter(user=self.user).first()
+        return profile.avatar if profile else None
+
+    def test_requires_login_and_post(self):
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+        self.client.logout()
+        self.assertEqual(self.upload(image_file()).redirect_chain[0][1], 302)
+        self.assertIsNone(self.avatar())
+
+    def test_upload_becomes_square_jpeg_with_random_name(self):
+        from PIL import Image
+        response = self.upload(image_file('minha foto.png'))
+        self.assertContains(response, 'Foto atualizada.')
+        avatar = self.avatar()
+        self.assertRegex(avatar.name, r'^avatars/[0-9a-f]{32}\.jpg$')
+        with Image.open(avatar.path) as image:
+            self.assertEqual(image.format, 'JPEG')
+            self.assertEqual(image.size, (256, 256))
+        # A foto aparece no header no lugar da inicial
+        self.assertContains(self.client.get('/'), f'src="{avatar.url}"')
+
+    def test_gps_location_is_removed(self):
+        from PIL import Image
+        exif = Image.Exif()
+        exif[0x010F] = 'Celular de teste'                  # fabricante
+        exif[0x8825] = {1: 'S', 2: (23.0, 33.0, 1.0)}      # GPS: São Paulo
+        self.upload(image_file('celular.jpg', fmt='JPEG', exif=exif))
+        with Image.open(self.avatar().path) as image:
+            self.assertEqual(len(image.getexif()), 0)
+
+    def test_fake_image_is_rejected(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        fake = SimpleUploadedFile('virus.png', b'MZ isto nao e uma imagem')
+        self.upload(fake)
+        self.assertFalse(self.avatar())
+
+    def test_too_big_file_is_rejected(self):
+        big = image_file('grande.png', size=(1000, 1000), noise=True)  # ~3 MB
+        self.assertGreater(big.size, 2 * 1024 * 1024)
+        response = self.upload(big)
+        self.assertContains(response, 'no máximo 2 MB')
+        self.assertFalse(self.avatar())
+
+    def test_image_bomb_is_rejected(self):
+        # Arquivo pequeno, mas com 36 milhões de pixels
+        bomb = image_file('bomba.png', size=(6000, 6000))
+        self.assertLess(bomb.size, 2 * 1024 * 1024)
+        response = self.upload(bomb)
+        self.assertContains(response, 'grande demais')
+        self.assertFalse(self.avatar())
+
+    def test_gif_is_rejected(self):
+        response = self.upload(image_file('anim.gif', fmt='GIF'))
+        self.assertContains(response, 'PNG, JPG ou WEBP')
+        self.assertFalse(self.avatar())
+
+    def test_replace_and_remove_delete_old_files(self):
+        self.upload(image_file())
+        first = self.avatar().path
+        self.upload(image_file())
+        self.assertFalse(os.path.exists(first))  # a antiga foi apagada
+
+        second = self.avatar().path
+        self.client.post(self.url, {'remove': '1'})
+        self.assertFalse(os.path.exists(second))
+        self.assertFalse(self.avatar())
+
+    def test_photo_file_is_deleted_with_account(self):
+        self.upload(image_file())
+        path = self.avatar().path
+        self.user.delete()
+        self.assertFalse(os.path.exists(path))
+
+    def test_comments_show_author_photo_and_work_without_photo(self):
+        from blog.models import Comment, Post
+        post = Post.objects.create(
+            title='Post', excerpt='r', content='c', is_published=True
+        )
+        # Autor sem foto (nem perfil): a página não pode quebrar
+        sem_foto = User.objects.create_user('s@email.com', 's@email.com', 'x', first_name='Sem')
+        Comment.objects.create(post=post, author=sem_foto, text='oi')
+        self.assertEqual(self.client.get(post.get_absolute_url()).status_code, 200)
+
+        self.upload(image_file())
+        Comment.objects.create(post=post, author=self.user, text='com foto')
+        page = self.client.get(post.get_absolute_url())
+        self.assertContains(page, f'src="{self.avatar().url}"')
+
+    def test_upload_rate_limit(self):
+        for _ in range(10):
+            self.upload(image_file())
+        response = self.upload(image_file())
+        self.assertContains(response, 'Muitas tentativas')

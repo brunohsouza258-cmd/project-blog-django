@@ -64,7 +64,7 @@
         {% if user.is_authenticated %}
             <form method="post" action="{% url 'blog:comment_create' post.slug %}" class="comment-form">
                 {% csrf_token %}
-                <span class="user-avatar" aria-hidden="true">{{ display_name|first|upper }}</span>
+                {% include "accounts/_avatar.html" with url=user_avatar_url name=display_name %}
                 <div class="comment-form-body">
                     <label for="{{ comment_form.text.id_for_label }}" class="sr-only">{{ comment_form.text.label }}</label>
                     {{ comment_form.text }}
@@ -81,7 +81,7 @@
         <ol class="comment-list">
             {% for comment in comments %}
                 <li class="comment">
-                    <span class="user-avatar" aria-hidden="true">{{ comment.author.first_name|default:comment.author.email|first|upper }}</span>
+                    {% include "accounts/_avatar.html" with url=comment.author.profile.avatar_url name=comment.author.first_name|default:"L" %}
                     <div class="comment-body">
                         <div class="comment-meta">
                             {# Só o primeiro nome: o e-mail de quem comenta nunca aparece #}

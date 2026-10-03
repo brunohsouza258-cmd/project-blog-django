@@ -1,0 +1,9 @@
+{% comment %}
+    Foto de perfil ou, sem foto, a inicial do nome numa bolinha colorida.
+    Uso: {% include "accounts/_avatar.html" with url=... name=... size="lg" %}
+{% endcomment %}
+{% if url %}
+    <img class="user-avatar{% if size %} user-avatar-{{ size }}{% endif %}" src="{{ url }}" alt="" width="64" height="64" loading="lazy">
+{% else %}
+    <span class="user-avatar{% if size %} user-avatar-{{ size }}{% endif %}" aria-hidden="true">{{ name|first|upper }}</span>
+{% endif %}
