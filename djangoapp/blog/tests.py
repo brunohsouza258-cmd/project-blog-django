@@ -181,15 +181,15 @@ class SeedPostsCommandTests(TestCase):
         from django.core.management import call_command
 
         call_command('seed_posts', '--sem-imagens', stdout=StringIO())
-        self.assertEqual(Post.objects.count(), 15)
-        self.assertEqual(Post.objects.published().count(), 12)
-        self.assertEqual(Category.objects.count(), 5)
+        self.assertEqual(Post.objects.count(), 27)
+        self.assertEqual(Post.objects.published().count(), 24)
+        self.assertEqual(Category.objects.count(), 6)
 
         # Rodar de novo não duplica nada
         output = StringIO()
         call_command('seed_posts', '--sem-imagens', stdout=output)
-        self.assertEqual(Post.objects.count(), 15)
-        self.assertIn('0 posts criados, 15 já existiam, 0 capas', output.getvalue())
+        self.assertEqual(Post.objects.count(), 27)
+        self.assertIn('0 posts criados, 27 já existiam, 0 capas', output.getvalue())
 
 
 class HeaderAndCoverTests(TestCase):
