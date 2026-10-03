@@ -117,3 +117,23 @@ class ResizeImageTests(TestCase):
                 resize_image(FakeField, 1200, max_height=1200)
             with Image.open(Path(tmp) / 'retrato.jpg') as image:
                 self.assertEqual(image.size, (400, 1200))
+
+
+class ImageValidatorTests(SimpleTestCase):
+    def test_favicon_must_be_png(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from utils.model_validators import validate_png
+        validate_png(SimpleUploadedFile('icone.PNG', b''))
+        with self.assertRaises(ValidationError):
+            validate_png(SimpleUploadedFile('icone.jpg', b''))
+
+    def test_cover_formats(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from utils.model_validators import validate_cover_image
+        for name in ('capa.jpg', 'capa.JPEG', 'capa.png', 'capa.webp'):
+            validate_cover_image(SimpleUploadedFile(name, b''))
+        for name in ('capa.gif', 'capa.svg', 'capa.exe', 'capa.png.html'):
+            with self.assertRaises(ValidationError):
+                validate_cover_image(SimpleUploadedFile(name, b''))
