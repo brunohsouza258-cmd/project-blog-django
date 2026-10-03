@@ -8,6 +8,11 @@
 # Os valores abaixo têm prioridade sobre o .env só neste modo.
 services:
   djangoapp:
+    # Fecha a porta 8000 neste modo: o site só é acessado pelo túnel.
+    # Assim ninguém da sua rede Wi-Fi fala direto com o Django, burlando a
+    # Cloudflare (ex.: forjando o endereço do link de "esqueci minha senha"
+    # ou o IP usado nos limites de tentativas).
+    ports: !reset []
     environment:
       # Produção: gunicorn, CSP bloqueando e sem páginas de erro detalhadas
       # (que mostrariam configurações internas para qualquer visitante).
