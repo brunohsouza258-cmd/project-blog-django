@@ -17,6 +17,9 @@ Blog pessoal feito com **Django** e **Docker**, com sistema de contas, página d
 - **Comentários** nos posts para quem tem conta, com moderação pelo admin.
 - **Prévia ao compartilhar**: links de posts enviados no WhatsApp e redes sociais mostram foto, título e resumo.
 - **Contato**: e-mail e WhatsApp no rodapé; o telefone é configurado no admin (Setup), fora do código.
+- **Política de Privacidade** (LGPD) em `/privacidade/`, com link no rodapé, no cadastro e no feedback.
+- **SEO**: `sitemap.xml` com os posts publicados, `robots.txt`, endereço canônico em cada página e busca/páginas de conta fora do Google.
+- **Backup automático** do banco uma vez por dia, guardando os últimos 14 dias.
 - **Feedback**: formulário para elogios, sugestões e problemas. As mensagens ficam salvas no admin (com marcação de "lido") e também são enviadas por e-mail.
 - **Assistente com IA local**: um chat flutuante, em todas as páginas, que responde **somente** sobre o blog (posts, autor, contato, como criar conta, etc.). A cada pergunta ele consulta os posts publicados mais recentes e os mais relacionados ao assunto, então conhece um post novo assim que ele é publicado, e responde com links clicáveis para os posts. A IA roda no próprio computador com [Ollama](https://ollama.com), sem enviar as conversas para serviços externos.
 
@@ -31,6 +34,7 @@ Blog pessoal feito com **Django** e **Docker**, com sistema de contas, página d
 - Fotos de perfil: o servidor confere se o arquivo é mesmo uma imagem, limita tamanho e dimensões (contra "bombas de imagem"), recria a foto sem metadados (remove a localização GPS de fotos de celular) e usa nomes aleatórios. A foto é apagada junto com a conta.
 - "Esqueci minha senha" não revela se um e-mail tem conta e tem limite de pedidos por hora.
 - Banco de dados e IA acessíveis apenas dentro do Docker.
+- Fontes hospedadas no próprio site: nenhuma requisição a servidores do Google (a CSP só aceita arquivos do próprio site).
 
 ## Tecnologias
 
@@ -116,11 +120,37 @@ docker compose rm -sf tunnel
 docker compose up -d --force-recreate djangoapp
 ```
 
+### Backups
+
+O container `backup` copia o banco uma vez por dia para o volume `db_backups` (fora do OneDrive) e apaga as cópias com mais de 14 dias. Para ver as cópias:
+
+```bash
+docker compose exec backup ls -lh /backups
+```
+
+Para levar uma cópia para fora do computador (pendrive, Google Drive...), recomendado de tempos em tempos:
+
+```bash
+docker compose cp backup:/backups ./backups-exportados
+```
+
+Para **restaurar** uma cópia (substitui o conteúdo atual do banco):
+
+```bash
+docker compose stop djangoapp
+docker compose exec backup sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_restore -h psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists /backups/NOME-DO-ARQUIVO.dump'
+docker compose start djangoapp
+```
+
+As fotos enviadas (capas e fotos de perfil) ficam em `data/web/media`.
+
 ### Testes
 
 ```bash
 docker compose exec djangoapp python manage.py test
 ```
+
+São 137 testes automáticos, cobrindo 96% do código.
 
 ## Estrutura
 
