@@ -210,6 +210,10 @@ LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'blog:index'
 LOGOUT_REDIRECT_URL = 'blog:index'
 
+# O link de "esqueci minha senha" vale por 1 hora (o padrão do Django é 3
+# dias). Quanto menos tempo, menor o risco se o e-mail cair em mãos erradas.
+PASSWORD_RESET_TIMEOUT = 60 * 60
+
 
 # IA local (Ollama) usada pelo chat do site
 

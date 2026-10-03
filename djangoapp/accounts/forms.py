@@ -1,5 +1,7 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import (
+    AuthenticationForm, PasswordResetForm, UserCreationForm,
+)
 from django.contrib.auth.models import User
 
 from utils.validators import validate_single_line
@@ -134,3 +136,16 @@ class DeleteAccountForm(forms.Form):
         if not self.user.check_password(password):
             raise forms.ValidationError('Senha incorreta.')
         return password
+
+
+class EmailPasswordResetForm(PasswordResetForm):
+    # Mesmo rótulo e exemplo dos outros formulários do site.
+    email = forms.EmailField(
+        label='E-mail',
+        max_length=254,
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'voce@email.com',
+            'autocomplete': 'email',
+            'autofocus': True,
+        }),
+    )

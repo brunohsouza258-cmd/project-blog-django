@@ -3,7 +3,8 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import (
-    LoginView, LogoutView, PasswordChangeView,
+    LoginView, LogoutView, PasswordChangeView, PasswordResetCompleteView,
+    PasswordResetConfirmView, PasswordResetDoneView, PasswordResetView,
 )
 from django.core.mail import send_mail
 from django.shortcuts import redirect, render
@@ -12,8 +13,10 @@ from django.views.decorators.http import require_http_methods
 
 from accounts.context_processors import display_name
 from accounts.forms import (
-    DeleteAccountForm, EmailAuthenticationForm, ProfileForm, RegisterForm,
+    DeleteAccountForm, EmailAuthenticationForm, EmailPasswordResetForm,
+    ProfileForm, RegisterForm,
 )
+from site_setup.models import SiteSetup
 from utils.rate_limit import is_rate_limited
 
 TOO_MANY_ATTEMPTS = 'Muitas tentativas seguidas. Espere alguns minutos.'
@@ -139,3 +142,49 @@ def delete_account(request):
             return redirect('blog:index')
 
     return render(request, 'accounts/delete.html', {'form': form})
+
+
+class AccountPasswordResetView(PasswordResetView):
+    """
+    "Esqueci minha senha": manda um link por e-mail para criar outra senha.
+
+    Segurança (já embutida no Django): a página de "enviado" aparece igual
+    exista ou não uma conta com o e-mail, então ninguém descobre quem tem
+    conta por aqui. O link só funciona uma vez e expira (PASSWORD_RESET_TIMEOUT).
+    """
+    template_name = 'accounts/password_reset_form.html'
+    form_class = EmailPasswordResetForm
+    email_template_name = 'accounts/emails/password_reset.txt'
+    subject_template_name = 'accounts/emails/password_reset_subject.txt'
+    success_url = reverse_lazy('accounts:password_reset_done')
+
+    def form_valid(self, form):
+        # Assina o e-mail com o nome do blog (Setup), e não com o endereço
+        # do site, que no modo público é um "xxxx.trycloudflare.com".
+        setup = SiteSetup.objects.order_by('id').first()
+        self.extra_email_context = {'site_name': setup.title if setup else 'Blog'}
+        return super().form_valid(form)
+
+    def post(self, request, *args, **kwargs):
+        # Até 5 pedidos por hora por IP: impede usar o site para lotar a
+        # caixa de entrada de alguém com e-mails de redefinição.
+        if is_rate_limited(request, 'password-reset', limit=5, window=60 * 60):
+            form = self.get_form()
+            form.add_error(None, TOO_MANY_ATTEMPTS)
+            return self.render_to_response(
+                self.get_context_data(form=form), status=429
+            )
+        return super().post(request, *args, **kwargs)
+
+
+class AccountPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'accounts/password_reset_done.html'
+
+
+class AccountPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'accounts/password_reset_confirm.html'
+    success_url = reverse_lazy('accounts:password_reset_complete')
+
+
+class AccountPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'accounts/password_reset_complete.html'
