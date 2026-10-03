@@ -1,11 +1,19 @@
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import (
+    LoginView, LogoutView, PasswordChangeView,
+)
 from django.core.mail import send_mail
 from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
+from django.views.decorators.http import require_http_methods
 
-from accounts.forms import EmailAuthenticationForm, RegisterForm
+from accounts.context_processors import display_name
+from accounts.forms import (
+    DeleteAccountForm, EmailAuthenticationForm, ProfileForm, RegisterForm,
+)
 from utils.rate_limit import is_rate_limited
 
 TOO_MANY_ATTEMPTS = 'Muitas tentativas seguidas. Espere alguns minutos.'
@@ -41,9 +49,8 @@ def register(request):
             fail_silently=True,
         )
 
-        messages.success(
-            request, f'Conta criada! Bem-vindo, {user.first_name}.'
-        )
+        first_name = display_name(request)['display_name']
+        messages.success(request, f'Conta criada! Bem-vindo, {first_name}.')
         return redirect('blog:index')
 
     return render(request, 'accounts/register.html', {'form': form})
@@ -77,3 +84,58 @@ class AccountLogoutView(LogoutView):
     def post(self, request, *args, **kwargs):
         messages.info(request, 'Você saiu da sua conta.')
         return super().post(request, *args, **kwargs)
+
+
+@login_required
+def profile(request):
+    """Minha conta: mostra e edita nome e e-mail (o R e o U do CRUD)."""
+    form = ProfileForm(request.POST or None, instance=request.user)
+
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Dados atualizados.')
+        return redirect('accounts:profile')
+
+    return render(request, 'accounts/profile.html', {'form': form})
+
+
+class AccountPasswordChangeView(PasswordChangeView):
+    # O PasswordChangeView do Django confere a senha atual, aplica os
+    # validadores de senha e mantém o usuário logado depois da troca.
+    template_name = 'accounts/password_change.html'
+    success_url = reverse_lazy('accounts:profile')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Senha alterada.')
+        return super().form_valid(form)
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def delete_account(request):
+    """Exclui a conta depois de confirmar a senha (o D do CRUD)."""
+    # Admin não se exclui por aqui: perderia o acesso ao painel sem querer.
+    if request.user.is_staff:
+        messages.error(
+            request, 'Contas de administrador não podem ser excluídas por aqui.'
+        )
+        return redirect('accounts:profile')
+
+    form = DeleteAccountForm(request.user, request.POST or None)
+
+    if request.method == 'POST':
+        # Limite de tentativas: impede testar senhas por esta página.
+        if is_rate_limited(request, 'delete-account', limit=5, window=60 * 15):
+            form.add_error(None, TOO_MANY_ATTEMPTS)
+            return render(
+                request, 'accounts/delete.html', {'form': form}, status=429
+            )
+
+        if form.is_valid():
+            user = request.user
+            logout(request)
+            user.delete()
+            messages.info(request, 'Sua conta foi excluída.')
+            return redirect('blog:index')
+
+    return render(request, 'accounts/delete.html', {'form': form})

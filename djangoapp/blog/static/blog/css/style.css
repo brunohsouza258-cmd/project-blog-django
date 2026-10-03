@@ -1117,6 +1117,98 @@ a {
 }
 
 /* ==========================================================================
+   Minha conta (perfil, senha, excluir)
+   ========================================================================== */
+
+/* Nome/inicial no header viram link para "Minha conta" */
+a.auth-greeting,
+a.user-chip {
+  transition: border-color 0.25s, color 0.25s, transform 0.25s var(--ease);
+}
+
+a.auth-greeting:hover,
+a.user-chip:hover {
+  color: var(--violet);
+}
+
+a.user-chip:hover {
+  border-color: var(--violet);
+  transform: translateY(-1px);
+}
+
+.user-avatar-lg {
+  width: 64px;
+  height: 64px;
+  font-size: 1.6rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.profile-head .auth-subtitle {
+  margin-bottom: 0;
+}
+
+/* Título menor em telas pequenas e nomes compridos quebram sem estourar */
+.profile-head .auth-title {
+  font-size: clamp(1.4rem, 6vw, 2rem);
+  overflow-wrap: anywhere;
+}
+
+.profile-head > div {
+  min-width: 0;
+}
+
+.profile-section-title {
+  margin: 24px 0 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.profile-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+/* Botões de ação perigosa (excluir conta) */
+.btn-danger {
+  color: #fff;
+  background: #dc2626;
+  box-shadow: 0 10px 24px -10px rgba(220, 38, 38, 0.6);
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
+  background: #b91c1c;
+}
+
+.btn-danger-ghost {
+  color: #dc2626;
+  background: transparent;
+  border: 1px solid rgba(220, 38, 38, 0.4);
+}
+
+.btn-danger-ghost:hover {
+  transform: translateY(-2px);
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.auth-card-danger::before {
+  background: #dc2626;
+}
+
+/* ==========================================================================
    Chat com a IA (botão flutuante + painel)
    ========================================================================== */
 

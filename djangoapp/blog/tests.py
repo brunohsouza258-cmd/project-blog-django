@@ -205,6 +205,15 @@ class HeaderAndCoverTests(TestCase):
         self.assertContains(response, 'Olá, <strong>Maria</strong>')
         self.assertContains(response, '>M</span>')
 
+    def test_header_shows_only_first_name(self):
+        user = User.objects.create_user(
+            'mc@email.com', 'mc@email.com', 'x', first_name='Maria Clara Souza'
+        )
+        self.client.force_login(user)
+        response = self.client.get(reverse('blog:index'))
+        self.assertContains(response, '<span class="user-name">Maria</span>')
+        self.assertNotContains(response, 'Clara')
+
     def test_visitor_does_not_see_user_chip(self):
         response = self.client.get(reverse('blog:index'))
         self.assertNotContains(response, 'class="user-chip"')

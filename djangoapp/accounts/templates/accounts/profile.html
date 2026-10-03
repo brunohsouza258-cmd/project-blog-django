@@ -1,0 +1,33 @@
+{% extends "blog/partials/base.html" %}
+
+{% block title %}Minha conta | {{ site_setup.title|default:"Blog" }}{% endblock title %}
+
+{% block content %}
+    <section class="auth container">
+        <div class="auth-card auth-card-wide">
+            <div class="profile-head">
+                <span class="user-avatar user-avatar-lg" aria-hidden="true">{{ display_name|first|upper }}</span>
+                <div>
+                    <h1 class="auth-title">Olá, <span class="gradient-text">{{ display_name }}</span></h1>
+                    <p class="auth-subtitle">Membro desde {{ user.date_joined|date:"d/m/Y" }}</p>
+                </div>
+            </div>
+
+            <h2 class="profile-section-title">Seus dados</h2>
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                {% include "accounts/_form_fields.html" %}
+                <button type="submit" class="btn btn-primary btn-block">
+                    Salvar alterações <span class="btn-arrow">&rarr;</span>
+                </button>
+            </form>
+
+            <div class="profile-actions">
+                <a href="{% url 'accounts:password_change' %}" class="btn btn-ghost btn-block">Alterar senha</a>
+                {% if not user.is_staff %}
+                    <a href="{% url 'accounts:delete' %}" class="btn btn-danger-ghost btn-block">Excluir minha conta</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock content %}

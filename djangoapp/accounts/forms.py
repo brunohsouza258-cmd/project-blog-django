@@ -75,3 +75,62 @@ class EmailAuthenticationForm(AuthenticationForm):
 
     def clean_username(self):
         return self.cleaned_data['username'].strip().lower()
+
+
+class ProfileForm(forms.ModelForm):
+    """Edição dos dados da conta na página "Minha conta"."""
+
+    class Meta:
+        model = User
+        fields = 'first_name', 'email',
+        labels = {'first_name': 'Nome', 'email': 'E-mail'}
+        widgets = {
+            'first_name': forms.TextInput(attrs={'autocomplete': 'given-name'}),
+            'email': forms.EmailInput(attrs={'autocomplete': 'email'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # No model do Django esses campos são opcionais; aqui são obrigatórios.
+        self.fields['first_name'].required = True
+        self.fields['first_name'].validators.append(validate_single_line)
+        self.fields['email'].required = True
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+        # O próprio usuário pode manter o e-mail; outro usuário, não.
+        taken = User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk)
+        if taken.exists():
+            raise forms.ValidationError('Já existe uma conta com este e-mail.')
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        # O login é feito pelo e-mail, que fica guardado no username.
+        user.username = user.email
+        if commit:
+            user.save()
+        return user
+
+
+class DeleteAccountForm(forms.Form):
+    """Confirma a senha antes de excluir a conta (ação sem volta)."""
+
+    password = forms.CharField(
+        label='Sua senha',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'autocomplete': 'current-password',
+            'placeholder': 'Digite sua senha para confirmar',
+        }),
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_password(self):
+        password = self.cleaned_data['password']
+        if not self.user.check_password(password):
+            raise forms.ValidationError('Senha incorreta.')
+        return password

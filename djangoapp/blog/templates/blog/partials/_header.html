@@ -13,10 +13,10 @@
         {% endcomment %}
         {# No celular, o "Olá, Nome" fica escondido dentro do menu; este chip mostra quem está logado sem precisar abrir #}
         {% if user.is_authenticated %}
-            <span class="user-chip" title="{{ user.first_name|default:user.email }}">
-                <span class="user-avatar" aria-hidden="true">{{ user.first_name|default:user.email|first|upper }}</span>
-                <span class="user-name">{{ user.first_name|default:user.email }}</span>
-            </span>
+            <a href="{% url 'accounts:profile' %}" class="user-chip" title="Minha conta">
+                <span class="user-avatar" aria-hidden="true">{{ display_name|first|upper }}</span>
+                <span class="user-name">{{ display_name }}</span>
+            </a>
         {% endif %}
         <input type="checkbox" id="menu-toggle" class="menu-toggle">
         <label for="menu-toggle" class="menu-button" aria-label="Abrir menu">
@@ -59,10 +59,11 @@
                 {# "user" vem do context processor de auth do Django #}
                 <div class="auth-links">
                     {% if user.is_authenticated %}
-                        <span class="auth-greeting">
-                            <span class="user-avatar" aria-hidden="true">{{ user.first_name|default:user.email|first|upper }}</span>
-                            Olá, <strong>{{ user.first_name|default:user.email }}</strong>
-                        </span>
+                        {# display_name = só o primeiro nome (accounts/context_processors.py) #}
+                        <a href="{% url 'accounts:profile' %}" class="auth-greeting" title="Minha conta">
+                            <span class="user-avatar" aria-hidden="true">{{ display_name|first|upper }}</span>
+                            Olá, <strong>{{ display_name }}</strong>
+                        </a>
                         <form action="{% url 'accounts:logout' %}" method="post">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-ghost btn-sm">Sair</button>
