@@ -1,4 +1,71 @@
 /* ==========================================================================
+   Fontes (hospedadas no próprio site)
+   ========================================================================== */
+
+/* Antes vinham do Google Fonts: cada visita mandava o IP do visitante para o
+   Google (ponto de privacidade na LGPD) e esperava outro servidor. Agora os
+   arquivos ficam em blog/fonts/ (licença OFL, ver OFL-*.txt).
+   Só o conjunto "latin", que já tem todos os acentos do português.
+   font-display: swap mostra o texto na hora com a fonte do sistema e troca
+   quando a fonte termina de baixar. */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/inter-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../fonts/inter-500.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/inter-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/inter-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/poppins-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/poppins-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../fonts/poppins-800.woff2") format("woff2");
+}
+
+/* ==========================================================================
    Tokens
    ========================================================================== */
 
