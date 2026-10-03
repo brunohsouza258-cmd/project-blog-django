@@ -133,3 +133,56 @@ class ChatPostsContextTests(TestCase):
 
         self.assertIn('O post MAIS RECENTE é: "Novinho"', self.prompt())
         self.assertNotIn('Agendado', self.prompt())
+
+
+class OllamaStreamTests(TestCase):
+    """Conversa com o Ollama simulada: não precisa da IA ligada."""
+
+    def fake_response(self, lines):
+        from unittest.mock import MagicMock
+        response = MagicMock()
+        response.__enter__.return_value = iter(lines)
+        return response
+
+    def test_stream_joins_chunks_and_stops_at_done(self):
+        from chatbot.views import _stream_from_ollama
+        lines = [
+            b'{"message": {"content": "Ol"}, "done": false}\n',
+            b'\n',
+            b'{"message": {"content": "\\u00e1!"}, "done": false}\n',
+            b'{"message": {"content": ""}, "done": true}\n',
+            b'{"message": {"content": "NUNCA"}, "done": false}\n',
+        ]
+        with patch('urllib.request.urlopen', return_value=self.fake_response(lines)):
+            self.assertEqual(''.join(_stream_from_ollama([])), 'Olá!')
+
+    def test_ai_offline_returns_friendly_message(self):
+        import urllib.error
+
+        from chatbot.views import OFFLINE_MESSAGE, _stream_from_ollama
+        with patch('urllib.request.urlopen', side_effect=urllib.error.URLError('down')):
+            self.assertEqual(list(_stream_from_ollama([])), [OFFLINE_MESSAGE])
+
+    def test_broken_answer_returns_friendly_message(self):
+        from chatbot.views import OFFLINE_MESSAGE, _stream_from_ollama
+        with patch('urllib.request.urlopen', return_value=self.fake_response([b'nao e json\n'])):
+            self.assertEqual(list(_stream_from_ollama([])), [OFFLINE_MESSAGE])
+
+    def test_request_uses_configured_model(self):
+        import json
+
+        from django.test import override_settings
+
+        from chatbot.views import _stream_from_ollama
+        with override_settings(OLLAMA_URL='http://ia:11434', OLLAMA_MODEL='modelo-x'), \
+                patch('urllib.request.urlopen', return_value=self.fake_response([])) as urlopen:
+            list(_stream_from_ollama([{'role': 'user', 'content': 'oi'}]))
+        request = urlopen.call_args.args[0]
+        self.assertEqual(request.full_url, 'http://ia:11434/api/chat')
+        body = json.loads(request.data)
+        self.assertEqual(body['model'], 'modelo-x')
+        self.assertTrue(body['stream'])
+
+    def test_history_must_be_a_list(self):
+        self.assertEqual(_clean_history('texto'), [])
+        self.assertEqual(_clean_history(None), [])

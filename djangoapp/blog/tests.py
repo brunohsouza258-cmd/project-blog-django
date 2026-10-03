@@ -426,3 +426,102 @@ class PrivacyPolicyTests(TestCase):
         for url in ('/', reverse('accounts:register'), reverse('feedback:feedback')):
             self.assertContains(self.client.get(url), f'href="{privacy_url}"', msg_prefix=url)
         self.assertContains(self.client.get('/sitemap.xml'), privacy_url)
+
+
+def png_bytes(size=(1600, 2400)):
+    from io import BytesIO
+
+    from PIL import Image
+    buffer = BytesIO()
+    Image.new('RGB', size, (236, 72, 153)).save(buffer, 'PNG')
+    return buffer.getvalue()
+
+
+class SeedCoverDownloadTests(TestCase):
+    """Download das capas do seed_posts, com a internet simulada."""
+
+    def fake_urlopen(self, data):
+        from unittest.mock import MagicMock
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = data
+        return response
+
+    def test_only_https_wikimedia_is_downloaded(self):
+        from unittest.mock import patch
+
+        from blog.management.commands.seed_posts import download_cover
+        with patch('urllib.request.urlopen') as urlopen:
+            for url in ('https://evil.com/x.jpg', 'http://upload.wikimedia.org/x.jpg',
+                        'https://upload.wikimedia.org.evil.com/x.jpg', 'file:///etc/passwd'):
+                self.assertIsNone(download_cover(url), url)
+            urlopen.assert_not_called()
+
+    def test_download_becomes_light_jpeg_inside_1200_box(self):
+        from io import BytesIO
+        from unittest.mock import patch
+
+        from PIL import Image
+
+        from blog.management.commands.seed_posts import download_cover
+        with patch('urllib.request.urlopen', return_value=self.fake_urlopen(png_bytes())):
+            data = download_cover('https://thumb.wikimedia.org/foto.png')
+        with Image.open(BytesIO(data)) as image:
+            self.assertEqual(image.format, 'JPEG')
+            self.assertEqual(image.size, (800, 1200))
+
+    def test_too_many_requests_waits_and_retries(self):
+        import urllib.error
+        from email.message import Message
+        from unittest.mock import patch
+
+        from blog.management.commands.seed_posts import download_cover
+        headers = Message()
+        headers['Retry-After'] = '7'
+        busy = urllib.error.HTTPError('u', 429, 'Too Many', headers, None)
+        with patch('urllib.request.urlopen', side_effect=[busy, self.fake_urlopen(png_bytes((50, 50)))]), \
+                patch('time.sleep') as sleep:
+            self.assertIsNotNone(download_cover('https://upload.wikimedia.org/a.png'))
+        sleep.assert_called_once_with(7)
+
+    def test_huge_download_is_refused(self):
+        from unittest.mock import patch
+
+        from blog.management.commands.seed_posts import MAX_DOWNLOAD, download_cover
+        with patch('urllib.request.urlopen', return_value=self.fake_urlopen(b'x' * (MAX_DOWNLOAD + 1))):
+            self.assertIsNone(download_cover('https://upload.wikimedia.org/a.png'))
+
+    def test_command_sets_cover_and_credit_and_survives_failures(self):
+        import shutil
+        import tempfile
+        from io import StringIO
+        from pathlib import Path
+        from unittest.mock import patch
+
+        from django.core.management import call_command
+        from django.test import override_settings
+
+        media = tempfile.mkdtemp()
+        calls = {'n': 0}
+
+        def fake_download(url):
+            calls['n'] += 1
+            if calls['n'] == 2:
+                raise OSError('falha de rede simulada')
+            from blog.management.commands.seed_posts import compress_cover
+            from io import BytesIO
+            from PIL import Image
+            with Image.open(BytesIO(png_bytes((300, 200)))) as image:
+                return compress_cover(image)
+
+        try:
+            with override_settings(MEDIA_ROOT=Path(media)), \
+                    patch('blog.management.commands.seed_posts.download_cover', side_effect=fake_download), \
+                    patch('time.sleep'):
+                err = StringIO()
+                call_command('seed_posts', stdout=StringIO(), stderr=err)
+            with_cover = Post.objects.exclude(cover='')
+            self.assertEqual(with_cover.count(), Post.objects.count() - 1)
+            self.assertIn('Wikimedia Commons', with_cover.first().cover_credit)
+            self.assertIn('falha de rede simulada', err.getvalue())
+        finally:
+            shutil.rmtree(media, ignore_errors=True)
