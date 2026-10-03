@@ -365,7 +365,7 @@ class FaviconTests(TestCase):
         response = self.client.get(reverse('blog:index'))
         self.assertContains(response, 'blog/img/favicon.svg')
         self.assertContains(response, 'blog/img/apple-touch-icon.png')
-        self.assertContains(response, '<meta name="theme-color" content="#7c3aed">')
+        self.assertContains(response, '<meta name="theme-color" content="#12070f">')
 
     def test_favicon_ico_redirects_to_static_file(self):
         response = self.client.get('/favicon.ico')
