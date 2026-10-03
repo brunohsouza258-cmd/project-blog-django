@@ -15,17 +15,35 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
+from django.http import HttpResponse
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.shortcuts import redirect
 from django.templatetags.static import static
 from django.views.static import serve
 
+from blog.sitemaps import SITEMAPS
 from utils.rate_limit import rate_limit_post
 
 # O login do admin é do próprio Django, então o limite de tentativas é
 # aplicado "por fora": no máximo 5 tentativas a cada 15 minutos por IP.
 admin.site.login = rate_limit_post('admin-login', 5, 60 * 15)(admin.site.login)
+
+def robots_txt(request):
+    # Diz aos buscadores (Google etc.) o que não precisa ser indexado e onde
+    # está o mapa do site. O endereço do admin NÃO aparece aqui de propósito:
+    # o robots.txt é público e listaria o painel para qualquer curioso.
+    lines = [
+        'User-agent: *',
+        'Disallow: /conta/',
+        'Disallow: /chat/',
+        'Disallow: /comentario/',
+        'Allow: /',
+        f'Sitemap: {request.scheme}://{request.get_host()}/sitemap.xml',
+    ]
+    return HttpResponse('\n'.join(lines) + '\n', content_type='text/plain')
+
 
 def favicon(request):
     # Navegadores pedem /favicon.ico sozinhos, mesmo sem link no HTML.
@@ -34,6 +52,9 @@ def favicon(request):
 
 urlpatterns = [
     path('favicon.ico', favicon),
+    path('robots.txt', robots_txt),
+    path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS},
+         name='django.contrib.sitemaps.views.sitemap'),
     path('', include('blog.urls')),
     path('conta/', include('accounts.urls')),
     path('feedback/', include('feedback.urls')),
