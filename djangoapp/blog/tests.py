@@ -382,3 +382,34 @@ class SelfHostedFontsTests(TestCase):
         csp = response['Content-Security-Policy-Report-Only']
         self.assertIn("font-src 'self'", csp)
         self.assertNotIn('google', csp)
+
+
+class SeoTests(TestCase):
+    def test_sitemap_lists_only_published_posts(self):
+        cat = Category.objects.create(name='Esporte')
+        make_post('Publicado', category=cat)
+        make_post('Rascunho', is_published=False)
+        response = self.client.get('/sitemap.xml')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '/post/publicado/')
+        self.assertContains(response, '/categoria/esporte/')
+        self.assertNotContains(response, 'rascunho')
+        self.assertContains(response, '<lastmod>')
+
+    def test_robots_txt_points_to_sitemap_and_hides_admin(self):
+        response = self.client.get('/robots.txt')
+        self.assertEqual(response['Content-Type'], 'text/plain')
+        self.assertContains(response, 'Sitemap: http://testserver/sitemap.xml')
+        self.assertContains(response, 'Disallow: /conta/')
+        self.assertNotContains(response, 'admin')
+
+    def test_canonical_and_noindex(self):
+        for i in range(8):
+            make_post(f'Post {i}')
+        home = self.client.get('/?utm_source=whatsapp')
+        self.assertContains(home, '<link rel="canonical" href="http://testserver/">')
+        self.assertNotContains(home, 'noindex')
+        page2 = self.client.get('/?page=2')
+        self.assertContains(page2, 'href="http://testserver/?page=2"')
+        self.assertContains(self.client.get('/?q=post'), '<meta name="robots" content="noindex">')
+        self.assertContains(self.client.get('/conta/entrar/'), '<meta name="robots" content="noindex">')

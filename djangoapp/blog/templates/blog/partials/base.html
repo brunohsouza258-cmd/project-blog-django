@@ -9,6 +9,15 @@
         alguém compartilha um link do site (título, resumo e imagem).
         A página do post troca esses valores pelos do post (block og).
     {% endcomment %}
+    {# Endereço "oficial" da página para o Google (evita páginas duplicadas) #}
+    {% block canonical %}
+        <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    {% endblock canonical %}
+    {# Busca e páginas de conta não devem aparecer no Google #}
+    {% if q or request.resolver_match.app_name == 'accounts' %}
+        <meta name="robots" content="noindex">
+    {% endif %}
+
     <meta property="og:site_name" content="{{ site_setup.title|default:'Blog' }}">
     <meta property="og:locale" content="pt_BR">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
