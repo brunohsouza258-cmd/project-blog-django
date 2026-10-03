@@ -25,10 +25,11 @@ services:
   psql:
     container_name: psql
     image: postgres:16-alpine
-    # Os dados do banco ficam salvos no seu PC, então não somem quando
-    # o container é removido com "docker compose down".
+    # Os dados do banco ficam num volume do Docker ("postgres_data"): não
+    # somem com "docker compose down" e ficam FORA do OneDrive. Sincronizar
+    # os arquivos de um banco em uso pode corrompê-lo.
     volumes:
-      - ./data/postgres/data:/var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./dotenv_files/.env
     restart: unless-stopped
@@ -40,6 +41,25 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  # Backup automático do banco, uma vez por dia (scripts/backup.sh). As
+  # cópias ficam no volume "db_backups" e as com mais de 14 dias são apagadas.
+  backup:
+    container_name: backup
+    image: postgres:16-alpine
+    entrypoint: ["sh", "/backup.sh"]
+    volumes:
+      - db_backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    env_file:
+      - ./dotenv_files/.env
+    environment:
+      - BACKUP_KEEP_DAYS=14
+      # Horário de Brasília nos nomes dos arquivos e no log
+      - TZ=America/Sao_Paulo
+    depends_on:
+      psql:
+        condition: service_healthy
+    restart: unless-stopped
   # IA local (Ollama). Roda na CPU; os modelos baixados ficam no volume
   # "ollama_data" (fora do OneDrive, porque são arquivos grandes).
   # Sem "ports": só o Django acessa, pelo endereço http://ollama:11434.
@@ -63,4 +83,6 @@ services:
     restart: unless-stopped
 
 volumes:
+  postgres_data:
+  db_backups:
   ollama_data:
