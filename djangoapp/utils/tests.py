@@ -97,3 +97,23 @@ class PhoneTests(TestCase):
 
     def test_no_phone_no_whatsapp(self):
         self.assertNotContains(self.client.get('/'), 'wa.me')
+
+
+class ResizeImageTests(TestCase):
+    def test_tall_portrait_is_limited_in_height(self):
+        import tempfile
+        from pathlib import Path
+
+        from django.test import override_settings
+        from PIL import Image
+
+        from utils.images import resize_image
+
+        with tempfile.TemporaryDirectory() as tmp:
+            Image.new('RGB', (1000, 3000), 'red').save(Path(tmp) / 'retrato.jpg')
+            with override_settings(MEDIA_ROOT=Path(tmp)):
+                class FakeField:
+                    name = 'retrato.jpg'
+                resize_image(FakeField, 1200, max_height=1200)
+            with Image.open(Path(tmp) / 'retrato.jpg') as image:
+                self.assertEqual(image.size, (400, 1200))

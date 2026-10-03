@@ -3,6 +3,20 @@
 <head>
     {% include "blog/partials/_head.html" %}
     <title>{% block title %}{{ site_setup.title|default:"Blog" }}{% endblock title %}</title>
+
+    {% comment %}
+        Open Graph: o que WhatsApp, Instagram, Facebook etc. mostram quando
+        alguém compartilha um link do site (título, resumo e imagem).
+        A página do post troca esses valores pelos do post (block og).
+    {% endcomment %}
+    <meta property="og:site_name" content="{{ site_setup.title|default:'Blog' }}">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    {% block og %}
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="{{ site_setup.title|default:'Blog' }}">
+        <meta property="og:description" content="{{ site_setup.description|default:'Ideias, tutoriais e novidades.' }}">
+    {% endblock og %}
 </head>
 <body id="topo">
     {% comment %}

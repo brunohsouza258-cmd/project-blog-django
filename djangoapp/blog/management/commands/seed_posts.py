@@ -55,9 +55,19 @@ def download_cover(url):
     # Abrir com o Pillow confere que é mesmo uma imagem. Salvar de novo como
     # JPEG padroniza o formato e descarta metadados escondidos no arquivo.
     with Image.open(BytesIO(data)) as image:
-        image = image.convert('RGB')
-        output = BytesIO()
-        image.save(output, 'JPEG', quality=85, optimize=True)
+        return compress_cover(image)
+
+
+def compress_cover(image):
+    """
+    Encaixa a imagem numa caixa de 1200x1200 (retratos ficam com 1200 de
+    altura) e salva um JPEG leve. Capas abaixo de ~300 KB aparecem com foto
+    na prévia do WhatsApp e deixam o site mais rápido no celular.
+    """
+    image = image.convert('RGB')
+    image.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+    output = BytesIO()
+    image.save(output, 'JPEG', quality=78, optimize=True, progressive=True)
     return output.getvalue()
 
 
