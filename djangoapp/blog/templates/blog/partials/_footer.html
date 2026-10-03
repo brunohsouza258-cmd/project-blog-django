@@ -17,6 +17,7 @@
                        target="_blank" rel="noopener noreferrer">{{ site_setup.contact_phone }}</a>
                 </p>
             {% endif %}
+            <p><a href="{% url 'blog:privacy' %}" class="footer-email">Política de Privacidade</a></p>
         </div>
 
         {% if site_setup.menulink_set.exists %}
