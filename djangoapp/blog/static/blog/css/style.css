@@ -24,6 +24,13 @@
   --shadow-sm: 0 1px 2px rgba(22, 20, 43, 0.06), 0 2px 8px rgba(22, 20, 43, 0.04);
   --shadow-lg: 0 18px 40px -12px rgba(124, 58, 237, 0.35);
 
+  /* Brilho do foco (campos) e sombras coloridas: viram rosa no celular */
+  --glow: rgba(124, 58, 237, 0.18);
+  --glow-strong: rgba(124, 58, 237, 0.5);
+  /* Manchas de cor no fundo da página */
+  --spot-1: rgba(124, 58, 237, 0.14);
+  --spot-2: rgba(6, 182, 212, 0.12);
+
   --radius: 16px;
   --radius-sm: 10px;
   --container: 1180px;
@@ -75,8 +82,8 @@ body {
   color: var(--text);
   background-color: var(--bg);
   background-image:
-    radial-gradient(circle at 10% -10%, rgba(124, 58, 237, 0.14), transparent 40%),
-    radial-gradient(circle at 95% 10%, rgba(6, 182, 212, 0.12), transparent 35%);
+    radial-gradient(circle at 10% -10%, var(--spot-1), transparent 40%),
+    radial-gradient(circle at 95% 10%, var(--spot-2), transparent 35%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
@@ -254,7 +261,7 @@ a {
   outline: none;
   width: 260px;
   border-color: var(--violet);
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+  box-shadow: 0 0 0 4px var(--glow);
 }
 
 .search-icon {
@@ -778,7 +785,7 @@ a {
 .comment-form textarea:focus {
   outline: none;
   border-color: var(--violet);
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+  box-shadow: 0 0 0 4px var(--glow);
 }
 
 .comments-login {
@@ -890,7 +897,7 @@ a {
   transform: translateY(-2px);
   color: var(--violet);
   border-color: var(--violet);
-  box-shadow: 0 6px 18px -6px rgba(124, 58, 237, 0.45);
+  box-shadow: 0 6px 18px -6px var(--glow-strong);
 }
 
 .page-link.is-active {
@@ -1170,7 +1177,7 @@ a {
   outline: none;
   border-color: var(--violet);
   background: var(--surface);
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+  box-shadow: 0 0 0 4px var(--glow);
 }
 
 .has-error input:not([type="hidden"]),
@@ -1609,7 +1616,7 @@ img.user-avatar {
 .chat-form textarea:focus {
   outline: none;
   border-color: var(--violet);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
+  box-shadow: 0 0 0 3px var(--glow);
 }
 
 .chat-send {
@@ -1690,7 +1697,7 @@ img.user-avatar {
   border: 1px solid var(--border);
   border-radius: 28px;
   background: var(--surface);
-  box-shadow: 0 30px 80px -20px rgba(124, 58, 237, 0.55);
+  box-shadow: 0 30px 80px -20px var(--glow-strong);
   text-align: center;
   animation: welcome-pop 3.8s var(--ease) forwards;
 }
@@ -1871,5 +1878,51 @@ img.user-avatar {
     align-items: center;
     gap: 16px;
     margin-left: auto;
+  }
+}
+
+
+/* ==========================================================================
+   Tema do celular: sempre escuro, com destaque rosa e laranja
+   ========================================================================== */
+
+/* Vem por último no arquivo de propósito: assim vence tanto o tema claro
+   quanto o escuro do sistema. No computador nada muda (segue o sistema). */
+@media (max-width: 860px) {
+  :root {
+    /* Diz ao navegador que a página é escura: barras de rolagem, campos de
+       formulário e o teclado do celular também ficam escuros. */
+    color-scheme: dark;
+
+    /* Destaques: o "violeta" vira rosa (links, foco, bordas ativas...) e o
+       laranja entra no degradê dos botões, do logo e dos títulos */
+    --violet: #ec4899;
+    --pink: #f472b6;
+    --amber: #fb923c;
+    --cyan: #fdba74;
+    --gradient: linear-gradient(135deg, #ff4fa3 0%, #f43f73 50%, #fb923c 100%);
+    --gradient-cool: linear-gradient(135deg, #f472b6 0%, #ea580c 100%);
+
+    /* Fundos e textos escuros, levemente puxados para o rosa */
+    --bg: #12070f;
+    --surface: #1d0d19;
+    --surface-2: #2a1325;
+    --text: #fdf2f8;
+    --text-muted: #d5a6c3;
+    --border: #3d1c36;
+    --header-bg: rgba(18, 7, 15, 0.8);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 18px 40px -12px rgba(236, 72, 153, 0.45);
+    --glow: rgba(236, 72, 153, 0.25);
+    --glow-strong: rgba(236, 72, 153, 0.55);
+    --spot-1: rgba(236, 72, 153, 0.22);
+    --spot-2: rgba(251, 146, 60, 0.16);
+  }
+
+  /* Etiqueta da categoria nos cards: rosa claro em vez do branco */
+  .post-category {
+    background: rgba(253, 242, 248, 0.92);
+    color: #be185d;
   }
 }
