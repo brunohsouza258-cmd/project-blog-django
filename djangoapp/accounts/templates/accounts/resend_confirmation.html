@@ -1,0 +1,22 @@
+{% extends "blog/partials/base.html" %}
+
+{% block title %}Reenviar confirmação | {{ site_setup.title|default:"Blog" }}{% endblock title %}
+
+{% block content %}
+    <section class="auth container">
+        <div class="auth-card">
+            <h1 class="auth-title">Reenviar <span class="gradient-text">confirmação</span></h1>
+            <p class="auth-subtitle">Digite o e-mail usado no cadastro e mandamos um novo link.</p>
+
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                {% include "accounts/_form_fields.html" %}
+                <button type="submit" class="btn btn-primary btn-block">
+                    Enviar <span class="btn-arrow">&rarr;</span>
+                </button>
+            </form>
+
+            <p class="auth-switch"><a href="{% url 'accounts:login' %}">&larr; Voltar para o login</a></p>
+        </div>
+    </section>
+{% endblock content %}

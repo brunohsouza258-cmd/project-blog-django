@@ -1,0 +1,19 @@
+{% extends "blog/partials/base.html" %}
+
+{% block title %}Link inválido | {{ site_setup.title|default:"Blog" }}{% endblock title %}
+
+{% block content %}
+    <section class="auth container">
+        <div class="auth-card">
+            <h1 class="auth-title">Link inválido</h1>
+            <p class="auth-subtitle">
+                Este link de confirmação já foi usado, expirou (ele vale por 3 dias)
+                ou não é válido. Se sua conta já estava confirmada, é só entrar.
+            </p>
+            <a href="{% url 'accounts:resend_confirmation' %}" class="btn btn-primary btn-block">
+                Pedir novo link <span class="btn-arrow">&rarr;</span>
+            </a>
+            <p class="auth-switch"><a href="{% url 'accounts:login' %}">&larr; Ir para o login</a></p>
+        </div>
+    </section>
+{% endblock content %}

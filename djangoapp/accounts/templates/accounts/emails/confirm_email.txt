@@ -1,0 +1,8 @@
+{% autoescape off %}Olá, {{ user.first_name }}!
+
+Para confirmar sua conta no {{ site_name }}, abra o link abaixo (ele vale por 3 dias):
+
+{{ link }}
+
+Se não foi você que pediu este cadastro, ignore este e-mail: nenhuma conta fica ativa sem essa confirmação.
+{% endautoescape %}

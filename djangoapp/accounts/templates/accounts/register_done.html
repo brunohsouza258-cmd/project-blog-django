@@ -1,0 +1,25 @@
+{% extends "blog/partials/base.html" %}
+
+{% block title %}Verifique seu e-mail | {{ site_setup.title|default:"Blog" }}{% endblock title %}
+
+{% block content %}
+    <section class="auth container">
+        <div class="auth-card">
+            <h1 class="auth-title">Verifique seu <span class="gradient-text">e-mail</span></h1>
+            {# Mesma mensagem tenha ou não uma conta com esse e-mail: ninguém
+               descobre quem já é cadastrado só tentando se registrar. #}
+            <p class="auth-subtitle">
+                Enviamos instruções para <strong>{{ email }}</strong>. Se for a primeira
+                vez, é um link para confirmar a conta; se você já tinha cadastro, é um
+                lembrete de como entrar.
+            </p>
+            <p class="form-help">Não chegou? Olhe a pasta de spam ou peça outro envio.</p>
+            <p class="auth-switch">
+                <a href="{% url 'accounts:resend_confirmation' %}">Reenviar e-mail de confirmação</a>
+            </p>
+            <p class="auth-switch auth-switch-tight">
+                <a href="{% url 'accounts:login' %}">&larr; Voltar para o login</a>
+            </p>
+        </div>
+    </section>
+{% endblock content %}

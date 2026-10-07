@@ -45,17 +45,21 @@ class RegisterForm(UserCreationForm):
     def clean_email(self):
         # Salva sempre em minúsculas para "Fulano@Gmail.com" e
         # "fulano@gmail.com" não virarem duas contas diferentes.
-        email = self.cleaned_data['email'].strip().lower()
-
-        if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError('Já existe uma conta com este e-mail.')
-
-        return email
+        #
+        # Propositalmente NÃO recusamos aqui um e-mail que já tem conta: um
+        # erro "já existe uma conta com este e-mail" no formulário permite a
+        # qualquer visitante descobrir quem tem conta no blog, só testando
+        # e-mails (enumeração de contas). A view decide o que fazer com um
+        # e-mail repetido e responde sempre a mesma coisa nos dois casos.
+        return self.cleaned_data['email'].strip().lower()
 
     def save(self, commit=True):
         user = super().save(commit=False)
         user.username = self.cleaned_data['email']
         user.email = self.cleaned_data['email']
+        # Conta começa desativada: só entra em vigor quando o link do
+        # e-mail de confirmação é aberto (veja accounts/views.py).
+        user.is_active = False
 
         if commit:
             user.save()
@@ -81,6 +85,19 @@ class EmailAuthenticationForm(AuthenticationForm):
 
     def clean_username(self):
         return self.cleaned_data['username'].strip().lower()
+
+    def confirm_login_allowed(self, user):
+        # Django já bloqueia usuário inativo aqui; só trocamos a mensagem
+        # padrão em inglês por uma em português explicando o motivo. O link
+        # para reenviar a confirmação fica no template (login.html), não
+        # nesta mensagem: assim não precisamos marcar HTML como seguro.
+        if not user.is_active:
+            raise forms.ValidationError(
+                'Confirme seu e-mail antes de entrar. Veja o link abaixo '
+                'para reenviar a confirmação.',
+                code='inactive',
+            )
+        super().confirm_login_allowed(user)
 
 
 class ProfileForm(forms.ModelForm):
@@ -153,6 +170,22 @@ class EmailPasswordResetForm(PasswordResetForm):
             'autofocus': True,
         }),
     )
+
+
+class ResendConfirmationForm(forms.Form):
+    """"Não recebi o e-mail de confirmação" — pede o e-mail de novo."""
+
+    email = forms.EmailField(
+        label='E-mail',
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'voce@email.com',
+            'autocomplete': 'email',
+            'autofocus': True,
+        }),
+    )
+
+    def clean_email(self):
+        return self.cleaned_data['email'].strip().lower()
 
 
 AVATAR_MAX_BYTES = 2 * 1024 * 1024  # 2 MB

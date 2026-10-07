@@ -21,6 +21,10 @@
             <p class="auth-switch">
                 <a href="{% url 'accounts:password_reset' %}">Esqueci minha senha</a>
             </p>
+            {# Visível sempre, não só em erro: é um link genérico, não revela nada sobre uma conta específica #}
+            <p class="auth-switch auth-switch-tight">
+                <a href="{% url 'accounts:resend_confirmation' %}">Não recebeu o e-mail de confirmação?</a>
+            </p>
             <p class="auth-switch auth-switch-tight">
                 Não tem conta? <a href="{% url 'accounts:register' %}">Criar conta</a>
             </p>

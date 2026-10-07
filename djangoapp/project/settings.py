@@ -211,6 +211,12 @@ LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'blog:index'
 LOGOUT_REDIRECT_URL = 'blog:index'
 
+# Backend próprio: deixa autenticar mesmo com conta inativa (e-mail ainda
+# não confirmado), para o formulário de login mostrar uma mensagem útil em
+# português, em vez do "usuário ou senha incorretos" genérico do Django.
+# Veja accounts/backends.py e EmailAuthenticationForm.confirm_login_allowed.
+AUTHENTICATION_BACKENDS = ['accounts.backends.AllowInactiveAuthenticationBackend']
+
 # O link de "esqueci minha senha" vale por 1 hora (o padrão do Django é 3
 # dias). Quanto menos tempo, menor o risco se o e-mail cair em mãos erradas.
 PASSWORD_RESET_TIMEOUT = 60 * 60

@@ -11,7 +11,7 @@ Blog pessoal feito com **Django** e **Docker**, com sistema de contas, página d
 - **Feed RSS** em `/feed/` para os leitores acompanharem os posts novos.
 - **Página inicial** com layout moderno, tema claro/escuro automático e versão para celular.
 - **Configuração pelo admin**: título, descrição, favicon, links do menu e quais partes do site aparecem (header, busca, menu, rodapé...) são editados no painel, sem mexer no código.
-- **Contas de usuário**: o visitante cria uma conta com nome, e-mail e senha, e entra com o e-mail. O dono do blog recebe um aviso por e-mail a cada novo cadastro. O site mostra só o primeiro nome de cada pessoa.
+- **Contas de usuário**: o visitante cria uma conta com nome, e-mail e senha e confirma por um link enviado por e-mail antes de conseguir entrar. O dono do blog recebe um aviso só quando a conta é confirmada de verdade. O site mostra só o primeiro nome de cada pessoa.
 - **Minha conta**: a pessoa vê e edita nome e e-mail, troca a senha, envia uma **foto de perfil** (PNG, JPG ou WEBP) e pode excluir a própria conta.
 - **Esqueci minha senha**: link por e-mail para criar uma senha nova, válido por 1 hora e de uso único.
 - **Comentários** nos posts para quem tem conta, com moderação pelo admin.
@@ -33,6 +33,7 @@ Blog pessoal feito com **Django** e **Docker**, com sistema de contas, página d
 - Conteúdo dos posts, comentários e respostas da IA sempre exibidos como texto (sem HTML); no chat, só links do próprio blog ficam clicáveis.
 - Fotos de perfil: o servidor confere se o arquivo é mesmo uma imagem, limita tamanho e dimensões (contra "bombas de imagem"), recria a foto sem metadados (remove a localização GPS de fotos de celular) e usa nomes aleatórios. A foto é apagada junto com a conta.
 - "Esqueci minha senha" não revela se um e-mail tem conta e tem limite de pedidos por hora.
+- Cadastro com confirmação por e-mail: a conta só é ativada ao abrir o link (válido por 3 dias, uso único). Cadastrar-se com um e-mail que já tem conta nunca mostra "já existe" na tela — avisa o dono daquele e-mail por mensagem, sempre com a mesma resposta na página, para ninguém descobrir quem tem conta só tentando e-mails.
 - Banco de dados e IA acessíveis apenas dentro do Docker.
 - Fontes hospedadas no próprio site: nenhuma requisição a servidores do Google (a CSP só aceita arquivos do próprio site).
 

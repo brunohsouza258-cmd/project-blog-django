@@ -2,25 +2,49 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib.auth.views import (
     LoginView, LogoutView, PasswordChangeView, PasswordResetCompleteView,
     PasswordResetConfirmView, PasswordResetDoneView, PasswordResetView,
 )
 from django.core.mail import send_mail
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.template.loader import render_to_string
+from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_http_methods, require_POST
 
 from accounts.context_processors import WELCOME_SESSION_KEY
 from accounts.forms import (
     AvatarForm, DeleteAccountForm, EmailAuthenticationForm,
-    EmailPasswordResetForm, ProfileForm, RegisterForm,
+    EmailPasswordResetForm, ProfileForm, RegisterForm, ResendConfirmationForm,
 )
 from accounts.models import Profile
+from accounts.tokens import make_confirmation_token, read_confirmation_token
 from site_setup.models import SiteSetup
 from utils.rate_limit import is_rate_limited
 
 TOO_MANY_ATTEMPTS = 'Muitas tentativas seguidas. Espere alguns minutos.'
+
+
+def _site_name():
+    setup = SiteSetup.objects.order_by('id').first()
+    return setup.title if setup else 'Blog'
+
+
+def _send_confirmation_email(request, user):
+    link = request.build_absolute_uri(
+        reverse('accounts:confirm_email', args=[make_confirmation_token(user)])
+    )
+    context = {'user': user, 'link': link, 'site_name': _site_name()}
+    send_mail(
+        subject=render_to_string(
+            'accounts/emails/confirm_email_subject.txt', context
+        ).strip(),
+        message=render_to_string('accounts/emails/confirm_email.txt', context),
+        from_email=None,  # usa o DEFAULT_FROM_EMAIL do settings.py
+        recipient_list=[user.email],
+        fail_silently=True,
+    )
 
 
 def register(request):
@@ -40,24 +64,100 @@ def register(request):
         )
 
     if request.method == 'POST' and form.is_valid():
-        user = form.save()
-        # Já entra na conta logo depois do cadastro.
-        login(request, user)
+        email = form.cleaned_data['email']
+        existing = User.objects.filter(email__iexact=email).first()
 
-        # Avisa o dono do blog que alguém criou uma conta.
-        send_mail(
-            subject=f'[Blog] Nova conta: {user.first_name}',
-            message=f'Nome: {user.first_name}\nE-mail: {user.email}',
-            from_email=None,  # usa o DEFAULT_FROM_EMAIL do settings.py
-            recipient_list=[settings.SIGNUP_NOTIFY_EMAIL],
-            fail_silently=True,
-        )
+        if existing and existing.is_active:
+            # Já existe conta de verdade: avisa por e-mail (nunca pela
+            # resposta do site) e não cria nada. Quem não tem acesso a essa
+            # caixa de entrada não aprende nada com isto.
+            send_mail(
+                subject=f'[Blog] Tentativa de cadastro com seu e-mail - {_site_name()}',
+                message=(
+                    'Alguém tentou criar uma conta neste blog usando o seu '
+                    'e-mail, mas você já tem uma conta por aqui.\n\n'
+                    'Se foi você, é só entrar normalmente. Esqueceu a '
+                    f'senha? {request.build_absolute_uri(reverse("accounts:password_reset"))}\n\n'
+                    'Se não foi você, pode ignorar este e-mail: nada muda '
+                    'na sua conta.'
+                ),
+                from_email=None,
+                recipient_list=[email],
+                fail_silently=True,
+            )
+        elif existing:
+            # Cadastro anterior nunca confirmado: atualiza com os dados
+            # desta tentativa (pode ter sido um erro de senha) e manda um
+            # novo link, em vez de dizer "e-mail já cadastrado".
+            existing.first_name = form.cleaned_data['first_name']
+            existing.set_password(form.cleaned_data['password1'])
+            existing.save()
+            _send_confirmation_email(request, existing)
+        else:
+            user = form.save()
+            _send_confirmation_email(request, user)
 
-        # Mostra o "Seja bem-vindo" no meio da tela na próxima página.
-        request.session[WELCOME_SESSION_KEY] = True
-        return redirect('blog:index')
+        # Mesma página nos três casos: nada na resposta do site revela se
+        # o e-mail já tinha conta.
+        return render(request, 'accounts/register_done.html', {'email': email})
 
     return render(request, 'accounts/register.html', {'form': form})
+
+
+def confirm_email(request, token):
+    """Ativa a conta quando a pessoa abre o link recebido por e-mail."""
+    user_pk = read_confirmation_token(token)
+    user = (
+        User.objects.filter(pk=user_pk, is_active=False).first()
+        if user_pk is not None else None
+    )
+
+    if user is None:
+        # Link forjado, expirado (3 dias) ou já usado: uma vez confirmada,
+        # a conta fica com is_active=True e o mesmo link para de funcionar,
+        # então ele não serve como "link mágico" reutilizável de login.
+        return render(request, 'accounts/confirm_email_invalid.html', status=400)
+
+    user.is_active = True
+    user.save(update_fields=['is_active'])
+    login(request, user)
+
+    # Só agora, com a conta confirmada de verdade, avisa o dono do blog.
+    send_mail(
+        subject=f'[Blog] Nova conta: {user.first_name}',
+        message=f'Nome: {user.first_name}\nE-mail: {user.email}',
+        from_email=None,
+        recipient_list=[settings.SIGNUP_NOTIFY_EMAIL],
+        fail_silently=True,
+    )
+
+    # Mostra o "Seja bem-vindo" no meio da tela na próxima página.
+    request.session[WELCOME_SESSION_KEY] = True
+    return redirect('blog:index')
+
+
+def resend_confirmation(request):
+    """"Não recebi o e-mail" — reenvia o link de confirmação."""
+    form = ResendConfirmationForm(request.POST or None)
+
+    if request.method == 'POST' and is_rate_limited(
+        request, 'resend-confirmation', limit=5, window=60 * 60
+    ):
+        form.add_error(None, TOO_MANY_ATTEMPTS)
+        return render(
+            request, 'accounts/resend_confirmation.html', {'form': form},
+            status=429,
+        )
+
+    if request.method == 'POST' and form.is_valid():
+        email = form.cleaned_data['email']
+        user = User.objects.filter(email__iexact=email, is_active=False).first()
+        if user:
+            _send_confirmation_email(request, user)
+        # Mesma página exista ou não um cadastro pendente com esse e-mail.
+        return render(request, 'accounts/register_done.html', {'email': email})
+
+    return render(request, 'accounts/resend_confirmation.html', {'form': form})
 
 
 class EmailLoginView(LoginView):

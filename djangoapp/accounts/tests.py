@@ -16,6 +16,12 @@ VALID_DATA = {
 }
 
 
+def extract_confirmation_link(email_message):
+    import re
+    match = re.search(r'https?://testserver(\S+)', email_message.body)
+    return match.group(1)
+
+
 class RegisterTests(TestCase):
     def setUp(self):
         cache.clear()
@@ -24,34 +30,127 @@ class RegisterTests(TestCase):
         response = self.client.get(reverse('accounts:register'))
         self.assertEqual(response.status_code, 200)
 
-    def test_register_creates_user_and_logs_in(self):
+    def test_register_creates_inactive_user_and_sends_confirmation(self):
         response = self.client.post(reverse('accounts:register'), VALID_DATA)
 
-        self.assertRedirects(response, reverse('blog:index'))
+        self.assertContains(response, 'Verifique seu')
         user = User.objects.get()
         # E-mail é salvo em minúsculas e usado como username
         self.assertEqual(user.email, 'maria@email.com')
         self.assertEqual(user.username, 'maria@email.com')
         self.assertEqual(user.first_name, 'Maria')
-        self.assertEqual(
-            int(self.client.session['_auth_user_id']), user.pk
-        )
-
-    def test_register_notifies_owner_by_email(self):
-        self.client.post(reverse('accounts:register'), VALID_DATA)
+        # Conta ainda não está ativa, e ninguém fica logado por só se cadastrar
+        self.assertFalse(user.is_active)
+        self.assertNotIn('_auth_user_id', self.client.session)
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, [settings.SIGNUP_NOTIFY_EMAIL])
-        self.assertIn('maria@email.com', mail.outbox[0].body)
+        self.assertEqual(mail.outbox[0].to, ['maria@email.com'])
+        self.assertIn('confirmar', mail.outbox[0].body.lower())
 
-    def test_register_rejects_duplicate_email(self):
-        User.objects.create_user('maria@email.com', 'maria@email.com', 'x')
+    def test_confirmation_link_activates_logs_in_and_notifies_owner(self):
+        self.client.post(reverse('accounts:register'), VALID_DATA)
+        link = extract_confirmation_link(mail.outbox[0])
 
-        response = self.client.post(reverse('accounts:register'), VALID_DATA)
+        response = self.client.get(link, follow=True)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Já existe uma conta com este e-mail.')
+        user = User.objects.get()
+        self.assertTrue(user.is_active)
+        self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
+        self.assertContains(response, 'class="welcome-overlay"')
+        self.assertContains(response, '<p class="welcome-name gradient-text">Maria!</p>')
+
+        # O dono do blog só é avisado quando a conta é confirmada de verdade
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[1].to, [settings.SIGNUP_NOTIFY_EMAIL])
+        self.assertIn('maria@email.com', mail.outbox[1].body)
+
+    def test_confirmation_link_is_single_use(self):
+        self.client.post(reverse('accounts:register'), VALID_DATA)
+        link = extract_confirmation_link(mail.outbox[0])
+
+        self.client.get(link)
+        self.client.logout()
+        response = self.client.get(link)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, 'Link inválido', status_code=400)
+
+    def test_tampered_confirmation_link_rejected(self):
+        response = self.client.get(
+            reverse('accounts:confirm_email', args=['token-forjado'])
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, 'Link inválido', status_code=400)
+
+    def test_expired_confirmation_link_rejected(self):
+        from unittest.mock import patch
+
+        from accounts.tokens import make_confirmation_token
+        user = User.objects.create_user(
+            'maria@email.com', 'maria@email.com', 'x', is_active=False,
+        )
+        # Gera o token com "agora" lá em 1970: qualquer prazo já passou.
+        with patch('django.core.signing.time.time', return_value=0):
+            old_token = make_confirmation_token(user)
+
+        response = self.client.get(
+            reverse('accounts:confirm_email', args=[old_token])
+        )
+        self.assertEqual(response.status_code, 400)
+        user.refresh_from_db()
+        self.assertFalse(user.is_active)
+
+    def test_register_does_not_leak_whether_email_exists(self):
+        User.objects.create_user(
+            'existe@email.com', 'existe@email.com', 'x', is_active=True,
+        )
+
+        response_new = self.client.post(
+            reverse('accounts:register'), {**VALID_DATA, 'email': 'nova@email.com'}
+        )
+        response_existing = self.client.post(
+            reverse('accounts:register'), {**VALID_DATA, 'email': 'existe@email.com'}
+        )
+
+        # Mesma página, mesmo status, para quem tem conta e para quem não tem
+        self.assertEqual(response_new.status_code, response_existing.status_code)
+        self.assertContains(response_new, 'Verifique seu')
+        self.assertContains(response_existing, 'Verifique seu')
+        self.assertNotContains(response_existing, 'já existe')
+        self.assertNotContains(response_existing, 'já tem')
+
+    def test_duplicate_active_email_gets_notice_not_duplicate_account(self):
+        User.objects.create_user(
+            'maria@email.com', 'maria@email.com', 'senha-antiga-999',
+            is_active=True,
+        )
+
+        self.client.post(reverse('accounts:register'), VALID_DATA)
+
+        # Não cria uma segunda conta, nem troca a senha da existente
         self.assertEqual(User.objects.count(), 1)
+        user = User.objects.get()
+        self.assertTrue(user.check_password('senha-antiga-999'))
+        # Aviso vai para o e-mail da conta já existente, não cria confirmação
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['maria@email.com'])
+        self.assertIn('já tem uma conta', mail.outbox[0].body)
+
+    def test_registering_twice_without_confirming_resends_new_link(self):
+        self.client.post(reverse('accounts:register'), VALID_DATA)
+        first_user_id = User.objects.get().pk
+
+        # Tenta de novo, com senha diferente (ex.: errou a primeira vez)
+        self.client.post(reverse('accounts:register'), {
+            **VALID_DATA, 'password1': 'outra-senha-456', 'password2': 'outra-senha-456',
+        })
+
+        self.assertEqual(User.objects.count(), 1)
+        user = User.objects.get()
+        self.assertEqual(user.pk, first_user_id)
+        self.assertFalse(user.is_active)
+        self.assertTrue(user.check_password('outra-senha-456'))
+        self.assertEqual(len(mail.outbox), 2)  # um link de confirmação por tentativa
 
     def test_register_rejects_different_passwords(self):
         data = {**VALID_DATA, 'password2': 'outra-senha-456'}
@@ -59,6 +158,64 @@ class RegisterTests(TestCase):
         self.client.post(reverse('accounts:register'), data)
 
         self.assertFalse(User.objects.exists())
+
+
+class ResendConfirmationTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.url = reverse('accounts:resend_confirmation')
+
+    def test_resend_to_pending_account_sends_new_link(self):
+        User.objects.create_user(
+            'maria@email.com', 'maria@email.com', 'x', is_active=False,
+        )
+
+        response = self.client.post(self.url, {'email': 'MARIA@email.com'})
+
+        self.assertContains(response, 'Verifique seu')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['maria@email.com'])
+
+    def test_resend_does_not_leak_account_existence(self):
+        User.objects.create_user(
+            'ativa@email.com', 'ativa@email.com', 'x', is_active=True,
+        )
+
+        response_active = self.client.post(self.url, {'email': 'ativa@email.com'})
+        response_unknown = self.client.post(self.url, {'email': 'ninguem@email.com'})
+
+        self.assertEqual(response_active.status_code, response_unknown.status_code)
+        self.assertContains(response_active, 'Verifique seu')
+        self.assertContains(response_unknown, 'Verifique seu')
+        # Conta ativa não recebe "link de confirmação" (já está confirmada)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_resend_rate_limit(self):
+        for _ in range(5):
+            self.client.post(self.url, {'email': 'x@email.com'})
+        response = self.client.post(self.url, {'email': 'x@email.com'})
+        self.assertEqual(response.status_code, 429)
+
+
+class LoginRequiresConfirmedEmailTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        User.objects.create_user(
+            'maria@email.com', 'maria@email.com', 'senha-forte-123',
+            is_active=False,
+        )
+
+    def test_cannot_login_before_confirming(self):
+        response = self.client.post(reverse('accounts:login'), {
+            'username': 'maria@email.com', 'password': 'senha-forte-123',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertContains(response, 'Confirme seu e-mail')
+
+    def test_login_page_links_to_resend(self):
+        response = self.client.get(reverse('accounts:login'))
+        self.assertContains(response, reverse('accounts:resend_confirmation'))
 
 
 class LoginLogoutTests(TestCase):
@@ -251,15 +408,6 @@ class ProfileCrudTests(TestCase):
         )
         self.assertRedirects(response, reverse('accounts:profile'))
         self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
-
-    def test_welcome_message_uses_first_name(self):
-        self.client.logout()
-        response = self.client.post(reverse('accounts:register'), {
-            'first_name': 'João Pedro Silva', 'email': 'joao@email.com',
-            'password1': 'senha-forte-123', 'password2': 'senha-forte-123',
-        }, follow=True)
-        self.assertContains(response, 'class="welcome-overlay"')
-        self.assertContains(response, '<p class="welcome-name gradient-text">João!</p>')
 
 
 class PasswordResetTests(TestCase):
