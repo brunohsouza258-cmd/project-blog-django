@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from blog.models import Category, Comment, Post
+from blog.models import Category, Comment, Like, Post
 
 
 @admin.register(Category)
@@ -59,3 +59,12 @@ class CommentAdmin(admin.ModelAdmin):
     @admin.action(description='Mostrar comentários selecionados')
     def show(self, request, queryset):
         queryset.update(is_visible=True)
+
+
+@admin.register(Like)
+class LikeAdmin(admin.ModelAdmin):
+    list_display = 'user', 'post', 'created_at',
+    list_filter = 'created_at',
+    search_fields = 'user__first_name', 'user__email', 'post__title',
+    list_select_related = 'user', 'post',
+    readonly_fields = 'user', 'post', 'created_at',

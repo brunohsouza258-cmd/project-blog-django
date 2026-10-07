@@ -31,6 +31,17 @@
         </section>
     {% endif %}
 
+    {% if most_liked %}
+        <section class="container">
+            <h2 class="section-title">Mais curtidos</h2>
+            <div class="posts-grid">
+                {% for post in most_liked %}
+                    {% include "blog/partials/_post_card.html" %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
     <section id="posts" class="container{% if not show_hero %} posts-page{% endif %}">
         {% if q %}
             <h1 class="section-title">Resultados para “{{ q }}”</h1>

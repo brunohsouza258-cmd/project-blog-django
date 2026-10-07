@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from blog.models import Category, Comment, Post
+from blog.models import Category, Comment, Like, Post
 from blog.search import search_posts
 
 
@@ -525,3 +525,142 @@ class SeedCoverDownloadTests(TestCase):
             self.assertIn('falha de rede simulada', err.getvalue())
         finally:
             shutil.rmtree(media, ignore_errors=True)
+
+
+class LikeTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.post = make_post('Post curtível')
+        self.maria = User.objects.create_user(
+            'maria@email.com', 'maria@email.com', 'x', first_name='Maria'
+        )
+        self.url = reverse('blog:like_toggle', args=[self.post.slug])
+
+    def test_visitor_cannot_like(self):
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('accounts:login'), response.url)
+        self.assertFalse(Like.objects.exists())
+
+    def test_visitor_sees_count_and_login_prompt(self):
+        Like.objects.create(post=self.post, user=self.maria)
+        response = self.client.get(self.post.get_absolute_url())
+        self.assertContains(response, '1 curtida')
+        self.assertContains(response, reverse('accounts:login'))
+
+    def test_like_and_unlike_toggles(self):
+        self.client.force_login(self.maria)
+
+        response = self.client.post(self.url)
+        self.assertRedirects(
+            response, f'{self.post.get_absolute_url()}#curtir',
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(Like.objects.filter(post=self.post, user=self.maria).count(), 1)
+
+        # Clicar de novo descurte (é um "toggle")
+        self.client.post(self.url)
+        self.assertFalse(Like.objects.filter(post=self.post, user=self.maria).exists())
+
+    def test_liked_state_and_count_shown_on_page(self):
+        self.client.force_login(self.maria)
+        self.client.post(self.url)
+
+        page = self.client.get(self.post.get_absolute_url())
+        self.assertContains(page, 'is-liked')
+        self.assertContains(page, '1 curtida')
+
+    def test_get_is_not_allowed(self):
+        self.client.force_login(self.maria)
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_cannot_like_draft(self):
+        draft = make_post('Rascunho', is_published=False)
+        self.client.force_login(self.maria)
+        response = self.client.post(reverse('blog:like_toggle', args=[draft.slug]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_like_count_is_per_post_not_global(self):
+        other_post = make_post('Outro post')
+        Like.objects.create(post=self.post, user=self.maria)
+
+        response = self.client.get(other_post.get_absolute_url())
+        self.assertContains(response, '0 curtida')
+
+    def test_likes_are_deleted_with_account(self):
+        Like.objects.create(post=self.post, user=self.maria)
+        self.maria.delete()
+        self.assertFalse(Like.objects.exists())
+
+    def test_likes_are_deleted_with_post(self):
+        Like.objects.create(post=self.post, user=self.maria)
+        self.post.delete()
+        self.assertFalse(Like.objects.exists())
+
+    def test_rate_limit(self):
+        self.client.force_login(self.maria)
+        for _ in range(30):
+            self.client.post(self.url)
+        response = self.client.post(self.url, follow=True)
+        self.assertContains(response, 'Muitas tentativas')
+
+    def test_most_liked_section_on_home(self):
+        popular = make_post('Post popular')
+        make_post('Post sem curtidas')
+        joao = User.objects.create_user('joao@email.com', 'joao@email.com', 'x')
+        Like.objects.create(post=popular, user=self.maria)
+        Like.objects.create(post=popular, user=joao)
+
+        response = self.client.get(reverse('blog:index'))
+
+        self.assertContains(response, 'Mais curtidos')
+        self.assertContains(response, 'Post popular')
+        # Post sem nenhuma curtida não entra na seção "Mais curtidos"
+        content = response.content.decode()
+        most_liked_section = content.split('Mais curtidos')[1].split('id="posts"')[0]
+        self.assertNotIn('Post sem curtidas', most_liked_section)
+
+    def test_most_liked_section_hidden_without_likes(self):
+        response = self.client.get(reverse('blog:index'))
+        self.assertNotContains(response, 'Mais curtidos')
+
+    def test_most_liked_hidden_on_search_and_pagination(self):
+        for i in range(8):
+            make_post(f'Post numerado {i}')
+        Like.objects.create(post=self.post, user=self.maria)
+
+        self.assertNotContains(
+            self.client.get(reverse('blog:index'), {'q': 'post'}), 'Mais curtidos'
+        )
+        self.assertNotContains(
+            self.client.get(reverse('blog:index'), {'page': 2}), 'Mais curtidos'
+        )
+
+
+class ShareButtonsTests(TestCase):
+    def test_share_links_use_absolute_url_and_title(self):
+        post = make_post('Compartilhe comigo')
+        response = self.client.get(post.get_absolute_url())
+
+        self.assertContains(response, 'https://wa.me/?text=')
+        self.assertContains(response, 'https://twitter.com/intent/tweet?text=')
+        self.assertContains(
+            response, f'http%3A//testserver{post.get_absolute_url()}'
+        )
+        self.assertContains(response, 'share-copy')
+        self.assertContains(response, f'data-url="http://testserver{post.get_absolute_url()}"')
+
+    def test_search_results_keep_relevance_order_with_likes_annotation(self):
+        # Garante que o annotate() de curtidas não bagunçou a ordem por
+        # relevância da busca (ver correção do UnorderedObjectListWarning).
+        docker = make_post('Tudo sobre Docker', content='docker docker docker container')
+        pouco = make_post('Um post qualquer', content='fala de docker de leve')
+        joao = User.objects.create_user('joao@email.com', 'joao@email.com', 'x')
+        # O post menos relevante tem mais curtidas, mas isso não deve mudar
+        # a ordem da busca (que é por relevância, não por popularidade).
+        Like.objects.create(post=pouco, user=joao)
+
+        response = self.client.get(reverse('blog:index'), {'q': 'docker'})
+        content = response.content.decode()
+        self.assertLess(content.index(docker.title), content.index(pouco.title))

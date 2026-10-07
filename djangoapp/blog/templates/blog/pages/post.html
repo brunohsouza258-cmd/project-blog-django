@@ -56,6 +56,40 @@
         </div>
     </article>
 
+    <div id="curtir" class="post-actions container">
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'blog:like_toggle' post.slug %}" class="like-form">
+                {% csrf_token %}
+                <button type="submit" class="like-button{% if user_has_liked %} is-liked{% endif %}"
+                        aria-pressed="{% if user_has_liked %}true{% else %}false{% endif %}">
+                    <svg class="like-icon" viewBox="0 0 24 24" fill="{% if user_has_liked %}currentColor{% else %}none{% endif %}"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span>{{ post.likes_count }} curtida{{ post.likes_count|pluralize }}</span>
+                </button>
+            </form>
+        {% else %}
+            {# Visitante vê a contagem e um link para entrar, sem poder curtir #}
+            <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}%23curtir" class="like-button" title="Entre para curtir">
+                <svg class="like-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <span>{{ post.likes_count }} curtida{{ post.likes_count|pluralize }}</span>
+            </a>
+        {% endif %}
+
+        <div class="share-buttons">
+            <span class="share-label">Compartilhar</span>
+            <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener noreferrer"
+               href="https://wa.me/?text={{ post.title|urlencode }}%20{{ post_url|urlencode }}">WhatsApp</a>
+            <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener noreferrer"
+               href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&amp;url={{ post_url|urlencode }}">X</a>
+            {# Sem JavaScript, o botão fica aqui mas sem ação; share.js liga o clique #}
+            <button type="button" class="btn btn-ghost btn-sm share-copy" data-url="{{ post_url }}">Copiar link</button>
+        </div>
+    </div>
+
     <section id="comentarios" class="comments container">
         <h2 class="section-title">
             Comentários{% if comments %} <span class="comments-count">{{ comments|length }}</span>{% endif %}
@@ -115,3 +149,8 @@
         </section>
     {% endif %}
 {% endblock content %}
+
+{% block scripts %}
+    {% load static %}
+    <script src="{% static 'blog/js/share.js' %}" defer></script>
+{% endblock scripts %}

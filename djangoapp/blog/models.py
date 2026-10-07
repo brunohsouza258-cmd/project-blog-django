@@ -161,3 +161,29 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'{self.author} em "{self.post}"'
+
+
+class Like(models.Model):
+    class Meta:
+        verbose_name = 'Curtida'
+        verbose_name_plural = 'Curtidas'
+        # Uma curtida por pessoa, por post: curtir de novo não duplica.
+        constraints = [
+            models.UniqueConstraint(
+                fields=['post', 'user'], name='unique_like_per_user_post',
+            ),
+        ]
+
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, related_name='likes', verbose_name='Post',
+    )
+    # Se a pessoa excluir a conta, as curtidas dela somem junto (igual aos
+    # comentários).
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='likes', verbose_name='Usuário',
+    )
+    created_at = models.DateTimeField('Curtido em', auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user} curtiu "{self.post}"'

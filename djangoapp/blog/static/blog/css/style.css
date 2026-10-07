@@ -810,6 +810,92 @@ a {
 }
 
 /* ==========================================================================
+   Curtir e compartilhar
+   ========================================================================== */
+
+/* Coraçãozinho pequeno nos cards (home, relacionados, mais curtidos) */
+.post-likes {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--pink);
+}
+
+.post-likes svg {
+  width: 13px;
+  height: 13px;
+}
+
+.post-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 760px;
+  padding-bottom: 32px;
+}
+
+/* Botão de curtir: contorno por padrão, preenchido e rosa quando curtido */
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.25s var(--ease), border-color 0.25s, color 0.25s, background-color 0.25s;
+}
+
+.like-button:hover {
+  transform: translateY(-2px);
+  border-color: var(--pink);
+  color: var(--pink);
+}
+
+.like-button.is-liked {
+  border-color: transparent;
+  background: rgba(236, 72, 153, 0.12);
+  color: var(--pink);
+}
+
+.like-icon {
+  width: 20px;
+  height: 20px;
+  /* O coração "pulsa" só quando a pessoa acabou de curtir (via :active),
+     não toda vez que o botão aparece na tela. */
+  transition: transform 0.25s var(--ease);
+}
+
+.like-button:active .like-icon {
+  transform: scale(1.25);
+}
+
+.share-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-label {
+  margin-right: 2px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Fica com cara de botão "Copiado!" por 2s, sem mudar de tamanho na troca */
+.share-copy {
+  min-width: 104px;
+}
+
+/* ==========================================================================
    Comentários
    ========================================================================== */
 
