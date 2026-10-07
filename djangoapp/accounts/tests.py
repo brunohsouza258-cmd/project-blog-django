@@ -47,11 +47,25 @@ class RegisterTests(TestCase):
         self.assertEqual(mail.outbox[0].to, ['maria@email.com'])
         self.assertIn('confirmar', mail.outbox[0].body.lower())
 
+    def test_confirmation_link_shows_button_without_activating(self):
+        # Apps de e-mail abrem o link sozinhos para checar se é seguro,
+        # antes da pessoa clicar de verdade. O GET não pode ativar a
+        # conta, senão esse acesso automático "gasta" o link.
+        self.client.post(reverse('accounts:register'), VALID_DATA)
+        link = extract_confirmation_link(mail.outbox[0])
+
+        response = self.client.get(link)
+
+        self.assertContains(response, 'Confirmar e-mail')
+        user = User.objects.get()
+        self.assertFalse(user.is_active)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
     def test_confirmation_link_activates_logs_in_and_notifies_owner(self):
         self.client.post(reverse('accounts:register'), VALID_DATA)
         link = extract_confirmation_link(mail.outbox[0])
 
-        response = self.client.get(link, follow=True)
+        response = self.client.post(link, follow=True)
 
         user = User.objects.get()
         self.assertTrue(user.is_active)
@@ -68,12 +82,22 @@ class RegisterTests(TestCase):
         self.client.post(reverse('accounts:register'), VALID_DATA)
         link = extract_confirmation_link(mail.outbox[0])
 
-        self.client.get(link)
+        self.client.post(link)
         self.client.logout()
-        response = self.client.get(link)
+        response = self.client.post(link)
 
         self.assertEqual(response.status_code, 400)
         self.assertContains(response, 'Link inválido', status_code=400)
+
+    def test_confirmation_link_get_can_be_opened_many_times(self):
+        # O GET (a página com o botão) não gasta o link: só o POST ativa.
+        self.client.post(reverse('accounts:register'), VALID_DATA)
+        link = extract_confirmation_link(mail.outbox[0])
+
+        self.client.get(link)
+        response = self.client.get(link)
+
+        self.assertContains(response, 'Confirmar e-mail')
 
     def test_tampered_confirmation_link_rejected(self):
         response = self.client.get(

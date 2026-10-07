@@ -1,0 +1,19 @@
+{% extends "blog/partials/base.html" %}
+
+{% block title %}Confirmar e-mail | {{ site_setup.title|default:"Blog" }}{% endblock title %}
+
+{% block content %}
+    <section class="auth container">
+        <div class="auth-card">
+            <h1 class="auth-title">Confirmar <span class="gradient-text">e-mail</span></h1>
+            <p class="auth-subtitle">Falta só um clique para ativar sua conta.</p>
+
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-block">
+                    Confirmar e-mail <span class="btn-arrow">&rarr;</span>
+                </button>
+            </form>
+        </div>
+    </section>
+{% endblock content %}

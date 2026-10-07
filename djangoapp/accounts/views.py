@@ -104,8 +104,18 @@ def register(request):
     return render(request, 'accounts/register.html', {'form': form})
 
 
+@require_http_methods(['GET', 'POST'])
 def confirm_email(request, token):
-    """Ativa a conta quando a pessoa abre o link recebido por e-mail."""
+    """Confirma a conta a partir do link recebido por e-mail.
+
+    O GET só mostra uma página com um botão, sem ativar nada: muitos
+    apps de e-mail (Gmail, Outlook) abrem os links da mensagem sozinhos
+    para checar se são seguros, antes da pessoa clicar de verdade. Se o
+    GET já ativasse a conta, esse acesso automático "gastaria" o link de
+    uso único e a pessoa veria "link inválido" ao clicar. A ativação de
+    verdade só acontece no POST, que só acontece quando alguém aperta o
+    botão.
+    """
     user_pk = read_confirmation_token(token)
     user = (
         User.objects.filter(pk=user_pk, is_active=False).first()
@@ -117,6 +127,9 @@ def confirm_email(request, token):
         # a conta fica com is_active=True e o mesmo link para de funcionar,
         # então ele não serve como "link mágico" reutilizável de login.
         return render(request, 'accounts/confirm_email_invalid.html', status=400)
+
+    if request.method == 'GET':
+        return render(request, 'accounts/confirm_email.html', {'token': token})
 
     user.is_active = True
     user.save(update_fields=['is_active'])
